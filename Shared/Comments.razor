@@ -1,0 +1,78 @@
+﻿@inject IHttpContextAccessor httpAccessor
+@inject UserCollectionBlaz.Service.ComService commentsService
+@using UserCollectionBlaz.Areas.Identity.Data
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager navigationManager
+@implements IAsyncDisposable
+
+<h3>Commentaries</h3>
+<div>
+    <label>Autor <b>@UserName</b>:</label>
+    <textarea placeholder="Comment" @bind="CurrentContent" />
+    <button type="button" class="btn alert-light" disabled="@(isPosting || !isHubConnected)">Send</button>
+</div>
+
+<div>
+    
+        @foreach (Comment comment in PostedComments)
+        {
+            <div>
+                <p><b>@comment.AutorName </b> ----- @comment.PostedTime </p>
+                <br/>
+                <p>@comment.Content</p>
+            </div>
+        }
+    
+</div>
+
+@code {
+    private string? UserName;
+    private string? UrlKey;
+    private string? CurrentContent;
+    private HubConnection? hubConnection;
+    private List<Comment>? PostedComments;
+    private bool isPosting;
+    private bool isHubConnected => hubConnection?.State == HubConnectionState.Connected;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UrlKey = navigationManager.Uri.Replace(navigationManager.BaseUri, "");
+        PostedComments = commentsService.GetAllByKey(UrlKey)?.ToList() ?? new();
+
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
+            .Build();
+        UserName = httpAccessor.HttpContext?.User.Identity?.Name ?? string.Empty;
+        hubConnection.On<Comment>("PostCom", (comment) =>
+        {
+            PostedComments.Add(comment);
+            InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    private async Task Post()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("PostCom",
+                new Comment()
+                    {
+                        AutorName = UserName,
+                        Content = CurrentContent,
+                        PlaceUrl = UrlKey,
+                        PostedTime = DateTime.Now
+                    });
+            CurrentContent = string.Empty;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

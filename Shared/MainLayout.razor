@@ -1,0 +1,53 @@
+﻿@using UserCollectionBlaz.Areas.Identity.Pages.Account
+@inherits LayoutComponentBase
+@inject IHttpContextAccessor HttpAccessor
+
+<PageTitle>UserCollectionBlaz</PageTitle>
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <header>
+        <div class="d-flex flex-row-reverse">
+            @if (string.IsNullOrEmpty(name))
+            {
+                <NavLink class="nav-link" Match="NavLinkMatch.All" href="account/register">
+                    Register
+                </NavLink>
+                <NavLink class="nav-link" Match="NavLinkMatch.All" href="account/login">
+                    Login
+                </NavLink>
+            }
+            else
+            {
+                <NavLink class="nav-link">
+                    @name
+                </NavLink>
+                <NavLink class="nav-link" Match="NavLinkMatch.All" href="account/logout">
+                    Logout
+                </NavLink>
+            }
+            <div class="nav-item">
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+
+@code{
+    private string? name;
+
+    protected override void OnInitialized()
+    {
+        name = HttpAccessor.HttpContext?.User.Identity?.Name ?? string.Empty;
+    }
+}
