@@ -36,7 +36,10 @@ namespace UserCollectionBlaz.Service
         /// <returns></returns>
         public IEnumerable<Comment>? GetAllByKey(string key)
         {
-            return from a in _context.comments where a.PlaceUrl == key select a;
+            return from a in _context.comments 
+                   where a.PlaceUrl == key 
+                   orderby a.PostedTime descending 
+                   select a;
         }
 
         public void Remove(Comment item)

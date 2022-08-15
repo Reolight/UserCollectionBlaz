@@ -6,11 +6,21 @@
 @implements IAsyncDisposable
 
 <h3>Commentaries</h3>
-<div>
-    <label>Autor <b>@UserName</b>:</label>
-    <textarea placeholder="Comment" @bind="CurrentContent" />
-    <button type="button" class="btn alert-light" disabled="@(isPosting || !isHubConnected)">Send</button>
-</div>
+@if (!string.IsNullOrEmpty(UserName))
+{
+    <div>
+        <label>Autor <b>@UserName</b>:</label>
+        <textarea placeholder="Comment" @bind="CurrentContent" />
+        <button type="button" class="btn btn-outline-success" disabled="@(isPosting || !isHubConnected)"
+            @onclick="Post">
+            Send
+        </button>
+    </div>
+}
+else
+{
+    <p>Log in to leave comments</p>
+}
 
 <div>
     
@@ -18,8 +28,8 @@
         {
             <div>
                 <p><b>@comment.AutorName </b> ----- @comment.PostedTime </p>
-                <br/>
                 <p>@comment.Content</p>
+                <br/>
             </div>
         }
     
@@ -43,7 +53,7 @@
             .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
             .Build();
         UserName = httpAccessor.HttpContext?.User.Identity?.Name ?? string.Empty;
-        hubConnection.On<Comment>("PostCom", (comment) =>
+        hubConnection.On<Comment>("RecieveCom", (comment) =>
         {
             PostedComments.Add(comment);
             InvokeAsync(StateHasChanged);
