@@ -1,0 +1,46 @@
+﻿@page "/account/{name}"
+@using UserCollectionBlaz.Areas.Identity.Data
+@inject Microsoft.AspNetCore.Identity.UserManager<AppUser> userManager
+@inject IHttpContextAccessor httpAccessor;
+
+@if (string.IsNullOrEmpty(UserName))
+{
+    <div class="alert alert-warning" role="alert">
+        <h2>You have no access to account info. Log in first.</h2>
+    </div>
+}
+else
+{
+    <p><b>@user.UserName</b></p>
+    <br />
+    <img src=@UrlImg alt="profile img">
+    if(_isOwner){
+        <button type="button" class="btn btn-outline-warning">
+            Change image
+        </button>
+    }
+
+    <p> Level Lv.@user.Level</p>
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" style="width: 50%" aria-valuenow=@(PostToNewLevel - user.PostedTimes) aria-valuemin="0" aria-valuemax=@PostToNewLevel></div>
+    </div>
+    <p>@(PostToNewLevel - user.PostedTimes)/@PostToNewLevel</p>
+}
+
+@code {
+    [Parameter] public string? name { get; set; }
+    private string? UserName;
+    private AppUser user;
+    private bool _isOwner;
+    private string? UrlImg;
+    private int PostToNewLevel;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserName = httpAccessor.HttpContext.User.Identity.Name;
+        name ??= UserName;
+        _isOwner = name.ToLower().Equals(UserName.ToLower());
+        user = await userManager.FindByNameAsync(UserName);
+        PostToNewLevel = (int)(10 * Math.Pow(1.2, user.Level));
+    }
+}
