@@ -28,6 +28,7 @@ namespace UserCollectionBlaz.Service
                     var uploadParams = new ImageUploadParams
                     {
                         File = new FileDescription(file.Name, stream),
+                        Transformation = new Transformation().Height(512).Width(512).Crop("fill").Gravity("face")
                     };
                     uploadResult = await _cloudinary.UploadAsync(uploadParams);
                 }

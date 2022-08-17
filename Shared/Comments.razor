@@ -14,7 +14,7 @@
                 @if (!string.IsNullOrEmpty(User.UserName))
                 {
                     <div class="bg-light p-2">
-                        <div class="d-flex flex-row align-items-start"><img class="rounded-circle" src=@User.AvatarSrc width="40" alt=@User.UserName>
+                        <div class="d-flex flex-row align-items-start"><img class="rounded-circle" src=@User.AvatarSrc width="36" height="36" alt=@User.UserName>
                             <textarea class="form-control ml-1 shadow-none textarea" placeholder="Enter your comment here" @bind="CurrentContent">
 
                             </textarea></div>
