@@ -2,6 +2,8 @@
 @using UserCollectionBlaz.ViewModel;
 @inject IHttpContextAccessor httpAccessor;
 @inject UserCollectionBlaz.Service.UserService userServ;
+@inject UserCollectionBlaz.Service.CloudinaryService cloudinary;
+@inject IWebHostEnvironment Environment
 
 @if (string.IsNullOrEmpty(name))
 {
@@ -19,14 +21,11 @@ else
 {
     <p><b>@user.UserName</b></p>
     <div class="card" style="width: 18rem;">
-        <img src=@user.AvatarSrc class="card-img-top" alt="...">
+        <img src=@user.AvatarSrc class="card-img-top rounded-circle" alt="..." width="120">
         <div class="card-body">
             @if(_isOwner){
-            <button type="button" class="btn btn-outline-warning">
-                Change image
-            </button>
-            <button type="button" class="btn btn-outline-dark" @onclick="() => _isEditState = !_isEditState">
-                Edit
+            <button type="button" class="btn btn-outline-dark" @onclick="EditModeSwitch">
+                Edit profile
             </button>
             } 
             else 
@@ -43,12 +42,41 @@ else
     <p>@(user.PostedTimes - MinPostsForCurrentLevel)/@PostToNewLevel</p>
 
     @if (_isEditState){
-        <p>It is an edit state, but you can't edit for now...</p>
+        if (errors is not null){
+            foreach (string error in errors){
+                <div class="alert alert-danger" role="alert">
+                    @error
+                </div>
+            }
+        }
+
+        <div class="form-row form-group">
+            <div class="form-floating">
+                <InputFile OnChange="@Upload" class="form-control form-control-lg" placeholder="Image" />
+                <span asp-validation-for="Image" class="text-danger"></span>
+            </div>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-floating">
+                <input @bind="EditUserData.UserName" class="form-control" autocomplete="username" aria-required="true" />
+                <label @bind="EditUserData.UserName"></label>
+                <span asp-validation-for="EditUserData.UserName" class="text-danger"></span>
+            </div>
+            <div class="form-floating">
+                <input @bind="EditUserData.Email" class="form-control" autocomplete="email" aria-required="true" />
+                <label @bind="EditUserData.Email"></label>
+                <span asp-validation-for="EditUserData.Email" class="text-danger"></span>
+            </div>
+
+            <button class="btn btn-outline-success" disabled=@(_isValidating || _isLoading) @onclick="SaveChanges">
+                Apply
+            </button>
+        </div>
     }
 }
 
 @code {
     [Parameter] public string? name { get; set; }
+    private List<string> errors;
     private UserVM? user;
     private bool _isOwner;
     private string? UrlImg;
@@ -56,9 +84,13 @@ else
     private int MinPostsForCurrentLevel;
     private string? StyleWidth;
     private string? LoggedUserName;
+    private UserVM? EditUserData;
+    private IBrowserFile Image;
 
+    private bool _isValidating;
     private bool _isEditState;
     private bool _isReady;
+    private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,5 +103,43 @@ else
             MinPostsForCurrentLevel = user.Level <= 1 ? 0 : (int)(10 * Math.Pow(1.2, user.Level - 1));
             StyleWidth = string.Format("width: {0}%", (int)((double)(user.PostedTimes - MinPostsForCurrentLevel) / PostToNewLevel * 100));
         }
+    }
+
+    private async Task SaveChanges()
+    {
+        _isValidating = true;
+        var imageUploadResult = await cloudinary.AddPhotoAsync(Image);
+        var res = await userServ.Update(new UserVM
+            {
+                UserName = EditUserData.UserName,
+                Email = EditUserData.Email,
+                AvatarSrc = imageUploadResult.Url.ToString()
+        });
+
+        if (!res.Succeeded){
+            errors = res.Errors.Select(er => er.Description).ToList();
+        }
+        else {
+            EditModeSwitch();
+        }
+
+        _isValidating = false;
+    }
+
+    private void EditModeSwitch()
+    {
+        errors = new();
+        _isEditState = !_isEditState;
+        if (_isEditState){
+            EditUserData = new();
+            EditUserData = (UserVM) user.Clone();
+        }
+    }
+
+    private void Upload(InputFileChangeEventArgs e)
+    {
+        _isLoading = true;
+        Image = e.File;
+        _isLoading = false;
     }
 }

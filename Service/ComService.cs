@@ -37,7 +37,7 @@ namespace UserCollectionBlaz.Service
         public IEnumerable<Comment>? GetAllByKey(string key)
         {
             return from a in _context.comments 
-                   where a.PlaceUrl == key 
+                   where a.PlaceUrl == key
                    orderby a.PostedTime descending 
                    select a;
         }

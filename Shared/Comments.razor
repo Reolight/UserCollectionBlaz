@@ -1,7 +1,9 @@
-﻿@inject IHttpContextAccessor httpAccessor
-@inject UserCollectionBlaz.Service.ComService commentsService
-@using UserCollectionBlaz.Areas.Identity.Data
+﻿@using UserCollectionBlaz.Areas.Identity.Data
 @using Microsoft.AspNetCore.SignalR.Client
+@using UserCollectionBlaz.ViewModel
+@inject IHttpContextAccessor httpAccessor
+@inject UserCollectionBlaz.Service.ComService commentsService
+@inject UserCollectionBlaz.Service.UserService userService
 @inject NavigationManager navigationManager
 @implements IAsyncDisposable
 
@@ -9,10 +11,10 @@
     <div class="d-flex justify-content-center row">
         <div class="col-md-8">
             <div class="d-flex flex-column comment-section">
-                @if (!string.IsNullOrEmpty(UserName))
+                @if (!string.IsNullOrEmpty(User.UserName))
                 {
                     <div class="bg-light p-2">
-                        <div class="d-flex flex-row align-items-start"><img class="rounded-circle" src="https://www.iconfinder.com/icons/586747/avatar_robot_tech_user_picture_user_profile_account_icon" width="40" alt="none">
+                        <div class="d-flex flex-row align-items-start"><img class="rounded-circle" src=@User.AvatarSrc width="40" alt=@User.UserName>
                             <textarea class="form-control ml-1 shadow-none textarea" placeholder="Enter your comment here" @bind="CurrentContent">
 
                             </textarea></div>
@@ -25,8 +27,16 @@
                 @foreach (Comment comment in PostedComments)
                 {
                     <div class="bg-white p-2">
-                        <div class="d-flex flex-row user-info"><img class="rounded-circle" alt="none" src="https://www.iconfinder.com/icons/586747/avatar_robot_tech_user_picture_user_profile_account_icon" width="40">
-                            <div class="d-flex flex-column justify-content-start ml-2"><span class="d-block font-weight-bold name">@comment.AutorName</span><span class="date text-black-50">Posted @comment.PostedTime</span></div>
+                        <div class="d-flex flex-row user-info">
+                            <img class="rounded-circle" alt="none" src=@comment.Autor.AvatarSrc width="40">
+                            <div class="d-flex flex-column justify-content-start ml-2">
+                                <span class="d-block font-weight-bold name" data-toggle="tooltip" data-placement="top" title=@string.Format("Lv.{0}\nPosted: {1}", comment.Autor.Level, comment.Autor.PostedTimes)>
+                                        @comment.Autor.UserName
+                                </span>
+                                <span class="date text-black-50">
+                                    Posted @comment.PostedTime
+                                </span>
+                            </div>
                         </div>
                         <div class="mt-2">
                             <p class="comment-text">@comment.Content</p>
@@ -46,7 +56,7 @@
 </div>
 
 @code {
-    private string? UserName;
+    private UserVM? User;
     private string? UrlKey;
     private string? CurrentContent;
     private HubConnection? hubConnection;
@@ -62,7 +72,7 @@
         hubConnection = new HubConnectionBuilder()
             .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
             .Build();
-        UserName = httpAccessor.HttpContext?.User.Identity?.Name ?? string.Empty;
+        User = await userService.Get(httpAccessor.HttpContext.User.Identity.Name);
         hubConnection.On<Comment>("RecieveCom", (comment) =>
         {
             PostedComments.Add(comment);
@@ -77,12 +87,11 @@
         if (hubConnection is not null)
         {
             await hubConnection.SendAsync("PostCom",
-                new Comment()
+                new ComVM()
                     {
-                        AutorName = UserName,
+                        AutorId = User.UserName,
                         Content = CurrentContent,
-                        PlaceUrl = UrlKey,
-                        PostedTime = DateTime.Now
+                        PlaceUrl = UrlKey
                     });
             CurrentContent = string.Empty;
         }

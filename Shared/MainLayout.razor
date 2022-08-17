@@ -1,6 +1,8 @@
 ﻿@using UserCollectionBlaz.Areas.Identity.Pages.Account
+@using UserCollectionBlaz.ViewModel
 @inherits LayoutComponentBase
 @inject IHttpContextAccessor HttpAccessor
+@inject UserCollectionBlaz.Service.UserService userService
 
 <PageTitle>UserCollectionBlaz</PageTitle>
 
@@ -11,7 +13,7 @@
 
     <header>
         <div class="d-flex flex-row-reverse">
-            @if (string.IsNullOrEmpty(name))
+            @if (user is null)
             {
                 <NavLink class="nav-link" Match="NavLinkMatch.All" href="account/register">
                     Register
@@ -22,8 +24,9 @@
             }
             else
             {
-                <NavLink class="nav-link" href=@ProfileUrl>
-                    @name
+                <NavLink class="nav-link" href=@ProfileUrl data-toggle="tooltip" data-placement="top" title=@string.Format("Lv.{0}\nPosted: {1}", user.Level, user.PostedTimes)>
+                    <img class="rounded-circle" width="40" src=@user.AvatarSrc>
+                    @user.UserName
                 </NavLink>
                 <NavLink class="nav-link" Match="NavLinkMatch.All" href="account/logout">
                     Logout
@@ -44,12 +47,12 @@
 
 
 @code{
-    private string? name;
+    private UserVM? user ;
     private string? ProfileUrl;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        name = HttpAccessor.HttpContext?.User.Identity?.Name ?? string.Empty;
-        ProfileUrl = "profile/" + name;
+        user = await userService.Get(HttpAccessor.HttpContext?.User.Identity?.Name);
+        ProfileUrl = "profile/" + user.UserName;
     }
 }

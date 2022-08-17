@@ -15,12 +15,16 @@ namespace UserCollectionBlaz.Service
             userManager = manager;
         }
 
-        //[HttpGet("profile-get/{name}")]
+        /// <summary>
+        /// Use to get user view model. It is shorted version of AppUser
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns>UserVM class by name</returns>
         public async Task<UserVM> Get(string name)
         {
             var uvm = new UserVM((from user in dbContext.Users 
                            where user.UserName == name 
-                           select user).First<AppUser>());
+                           select user).First());
             return uvm;     
         }
 
@@ -29,9 +33,8 @@ namespace UserCollectionBlaz.Service
             return userManager.Users.ToList();
         }
 
-        public async Task<bool> HavePostedAnotherOne(string userName)
+        public async Task<bool> HavePostedAnotherOne(AppUser user)
         {
-            AppUser user = await userManager.FindByNameAsync(userName);
             if (user.Level == 0) user.Level = 1;
             bool lvled = false;
             user.PostedTimes++;
@@ -43,6 +46,15 @@ namespace UserCollectionBlaz.Service
 
             dbContext.SaveChanges();
             return lvled;
+        }
+
+        public async Task<IdentityResult> Update(UserVM userVM)
+        {
+            AppUser user = await userManager.FindByNameAsync(userVM.UserName);
+            user.UserName = userVM.UserName;
+            user.Email = userVM.Email;
+            user.AvatarSrc = userVM.AvatarSrc;
+            return await userManager.UpdateAsync(user);
         }
     }
 }

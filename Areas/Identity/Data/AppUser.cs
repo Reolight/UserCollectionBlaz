@@ -13,5 +13,6 @@ public class AppUser : IdentityUser
     public string AvatarSrc { get; set; }
     public int PostedTimes { get; set; }
     public int Level { get; set; } = 1;
+    public ICollection<Comment> Comments { get; set; }
 }
 

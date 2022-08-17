@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using UserCollectionBlaz.Areas.Identity.Data;
+using UserCollectionBlaz.Data;
 using UserCollectionBlaz.Server;
 using UserCollectionBlaz.Service;
 
@@ -21,6 +22,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<ComService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<CloudinaryService>();
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.AddHttpClient();
 builder.Services.AddResponseCompression(opts =>
 {

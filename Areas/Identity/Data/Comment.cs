@@ -10,7 +10,7 @@ namespace UserCollectionBlaz.Areas.Identity.Data
         [Required]
         public int Id { get; set; }
         public string PlaceUrl { get; set; }
-        public string AutorName { get; set; }
+        public AppUser Autor { get; set; }
         public string Content { get; set; }
         public DateTime PostedTime { get; set; }
     }

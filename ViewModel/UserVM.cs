@@ -5,7 +5,7 @@ using UserCollectionBlaz.Areas.Identity.Data;
 
 namespace UserCollectionBlaz.ViewModel
 {
-    public class UserVM
+    public class UserVM : ICloneable
     {
         [Required]
         public string UserName { get; set; }
@@ -17,6 +17,7 @@ namespace UserCollectionBlaz.ViewModel
         public int PostedTimes { get; set; }
         public string AvatarSrc { get; set; }
 
+        public UserVM() { }
         public UserVM(AppUser user)
         {
             UserName = user.UserName;
@@ -24,6 +25,11 @@ namespace UserCollectionBlaz.ViewModel
             Level = user.Level;
             PostedTimes = user.PostedTimes;
             AvatarSrc = user.AvatarSrc;
+        }
+
+        public object Clone()
+        {
+            return this.MemberwiseClone();
         }
     }
 }
