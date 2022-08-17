@@ -22,7 +22,7 @@
             }
             else
             {
-                <NavLink class="nav-link">
+                <NavLink class="nav-link" href=@ProfileUrl>
                     @name
                 </NavLink>
                 <NavLink class="nav-link" Match="NavLinkMatch.All" href="account/logout">
@@ -45,9 +45,11 @@
 
 @code{
     private string? name;
+    private string? ProfileUrl;
 
     protected override void OnInitialized()
     {
         name = HttpAccessor.HttpContext?.User.Identity?.Name ?? string.Empty;
+        ProfileUrl = "profile/" + name;
     }
 }

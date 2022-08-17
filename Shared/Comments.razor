@@ -12,7 +12,10 @@
                 @if (!string.IsNullOrEmpty(UserName))
                 {
                     <div class="bg-light p-2">
-                        <div class="d-flex flex-row align-items-start"><img class="rounded-circle" src="https://www.iconfinder.com/icons/586747/avatar_robot_tech_user_picture_user_profile_account_icon" width="40" alt="none"><textarea class="form-control ml-1 shadow-none textarea"></textarea></div>
+                        <div class="d-flex flex-row align-items-start"><img class="rounded-circle" src="https://www.iconfinder.com/icons/586747/avatar_robot_tech_user_picture_user_profile_account_icon" width="40" alt="none">
+                            <textarea class="form-control ml-1 shadow-none textarea" placeholder="Enter your comment here" @bind="CurrentContent">
+
+                            </textarea></div>
                         <div class="mt-2 text-right"><button class="btn btn-primary btn-sm shadow-none" @onclick="Post" type="button">Post comment</button><button class="btn btn-outline-primary btn-sm ml-1 shadow-none" type="button">Cancel</button></div>
                     </div>
                 }

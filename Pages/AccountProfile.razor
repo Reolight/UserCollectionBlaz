@@ -1,0 +1,75 @@
+﻿@page "/profile/{name}"
+@using UserCollectionBlaz.ViewModel;
+@inject IHttpContextAccessor httpAccessor;
+@inject UserCollectionBlaz.Service.UserService userServ;
+
+@if (string.IsNullOrEmpty(name))
+{
+    <div class="alert alert-warning" role="alert">
+        <h2>You have no access to account info. Log in first.</h2>
+    </div>
+}
+else if (user is null)
+{
+    <div class="alert alert-danger" role="alert">
+        <h2>This user is not accessible</h2>
+    </div>
+}
+else
+{
+    <p><b>@user.UserName</b></p>
+    <div class="card" style="width: 18rem;">
+        <img src=@user.AvatarSrc class="card-img-top" alt="...">
+        <div class="card-body">
+            @if(_isOwner){
+            <button type="button" class="btn btn-outline-warning">
+                Change image
+            </button>
+            <button type="button" class="btn btn-outline-dark" @onclick="() => _isEditState = !_isEditState">
+                Edit
+            </button>
+            } 
+            else 
+            {
+                <button class="btn btn-outline-success">Laik</button>
+            }
+        </div>
+    </div>
+
+    <p> Level Lv.@user.Level</p>
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" style=@StyleWidth aria-valuenow=@user.PostedTimes aria-valuemin=@MinPostsForCurrentLevel aria-valuemax=@PostToNewLevel></div>
+    </div>
+    <p>@(user.PostedTimes - MinPostsForCurrentLevel)/@PostToNewLevel</p>
+
+    @if (_isEditState){
+        <p>It is an edit state, but you can't edit for now...</p>
+    }
+}
+
+@code {
+    [Parameter] public string? name { get; set; }
+    private UserVM? user;
+    private bool _isOwner;
+    private string? UrlImg;
+    private int PostToNewLevel;
+    private int MinPostsForCurrentLevel;
+    private string? StyleWidth;
+    private string? LoggedUserName;
+
+    private bool _isEditState;
+    private bool _isReady;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoggedUserName = httpAccessor.HttpContext.User.Identity.Name;
+        name ??= LoggedUserName;
+        if (!string.IsNullOrEmpty(name)){
+            user = await userServ.Get(name);
+            _isOwner = LoggedUserName.ToLower().Equals(user.UserName.ToLower());
+            PostToNewLevel = (int)(10 * Math.Pow(1.2, user.Level));
+            MinPostsForCurrentLevel = user.Level <= 1 ? 0 : (int)(10 * Math.Pow(1.2, user.Level - 1));
+            StyleWidth = string.Format("width: {0}%", (int)((double)(user.PostedTimes - MinPostsForCurrentLevel) / PostToNewLevel * 100));
+        }
+    }
+}
