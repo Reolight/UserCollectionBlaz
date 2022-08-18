@@ -10,6 +10,7 @@ namespace UserCollectionBlaz.Areas.Identity.Data;
 
 public class AppUser : IdentityUser
 {
+    public bool IsAdmin { get; set; }
     public string AvatarSrc { get; set; }
     public int PostedTimes { get; set; }
     public int Level { get; set; } = 1;

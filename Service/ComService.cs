@@ -1,4 +1,5 @@
 ﻿using UserCollectionBlaz.Areas.Identity.Data;
+using Microsoft.EntityFrameworkCore; 
 
 namespace UserCollectionBlaz.Service
 {
@@ -36,10 +37,10 @@ namespace UserCollectionBlaz.Service
         /// <returns></returns>
         public IEnumerable<Comment>? GetAllByKey(string key)
         {
-            return from a in _context.comments 
-                   where a.PlaceUrl == key
-                   orderby a.PostedTime descending 
-                   select a;
+            return _context.comments
+                .Where(com => com.PlaceUrl == key)
+                .Include(com => com.Autor)
+                .Select(com => com);
         }
 
         public void Remove(Comment item)

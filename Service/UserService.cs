@@ -20,12 +20,12 @@ namespace UserCollectionBlaz.Service
         /// </summary>
         /// <param name="name"></param>
         /// <returns>UserVM class by name</returns>
-        public async Task<UserVM> Get(string name)
+        public async Task<UserVM?> Get(string name)
         {
-            var uvm = new UserVM((from user in dbContext.Users 
-                           where user.UserName == name 
-                           select user).First());
-            return uvm;     
+            var userData = (from user in dbContext.Users
+                       where user.UserName == name
+                       select user).FirstOrDefault();
+            return userData is null? null : new UserVM(userData);     
         }
 
         public IEnumerable<AppUser>? GetAll()

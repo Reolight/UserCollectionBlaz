@@ -11,7 +11,7 @@
     <div class="d-flex justify-content-center row">
         <div class="col-md-8">
             <div class="d-flex flex-column comment-section">
-                @if (!string.IsNullOrEmpty(User.UserName))
+                @if (User is not null)
                 {
                     <div class="bg-light p-2">
                         <div class="d-flex flex-row align-items-start"><img class="rounded-circle" src=@User.AvatarSrc width="36" height="36" alt=@User.UserName>
@@ -27,16 +27,16 @@
                 @foreach (Comment comment in PostedComments)
                 {
                     <div class="bg-white p-2">
-                        <div class="d-flex flex-row user-info">
-                            <img class="rounded-circle" alt="none" src=@comment.Autor.AvatarSrc width="40">
-                            <div class="d-flex flex-column justify-content-start ml-2">
-                                <span class="d-block font-weight-bold name" data-toggle="tooltip" data-placement="top" title=@string.Format("Lv.{0}\nPosted: {1}", comment.Autor.Level, comment.Autor.PostedTimes)>
-                                        @comment.Autor.UserName
-                                </span>
-                                <span class="date text-black-50">
-                                    Posted @comment.PostedTime
-                                </span>
-                            </div>
+                        <div class="d-flex flex-row user-info" @onclick="() => NavigateTo(comment.Autor.UserName)">
+                                <img class="rounded-circle" alt="none" src=@comment.Autor.AvatarSrc width="40">
+                                <div class="d-flex flex-column justify-content-start ml-2">
+                                    <span class="d-block font-weight-bold name" data-toggle="tooltip" data-placement="top" title=@string.Format("Lv.{0}\nPosted: {1}", comment.Autor.Level, comment.Autor.PostedTimes)>
+                                            @comment.Autor.UserName
+                                    </span>
+                                    <span class="date text-black-50">
+                                        Posted @comment.PostedTime
+                                    </span>
+                                </div>
                         </div>
                         <div class="mt-2">
                             <p class="comment-text">@comment.Content</p>
@@ -68,11 +68,10 @@
     {
         UrlKey = navigationManager.Uri.Replace(navigationManager.BaseUri, "");
         PostedComments = commentsService.GetAllByKey(UrlKey)?.ToList() ?? new();
-
+        User = await userService.Get(httpAccessor.HttpContext.User.Identity.Name);
         hubConnection = new HubConnectionBuilder()
             .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
             .Build();
-        User = await userService.Get(httpAccessor.HttpContext.User.Identity.Name);
         hubConnection.On<Comment>("RecieveCom", (comment) =>
         {
             PostedComments.Add(comment);
@@ -104,4 +103,6 @@
             await hubConnection.DisposeAsync();
         }
     }
+
+    private void NavigateTo(string userName) => navigationManager.NavigateTo("profile/"+userName);
 }

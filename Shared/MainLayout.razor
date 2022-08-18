@@ -53,6 +53,6 @@
     protected override async Task OnInitializedAsync()
     {
         user = await userService.Get(HttpAccessor.HttpContext?.User.Identity?.Name);
-        ProfileUrl = "profile/" + user.UserName;
+        if (user is not null ) ProfileUrl = "profile/" + user.UserName;
     }
 }

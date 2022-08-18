@@ -5,7 +5,7 @@
 @inject UserCollectionBlaz.Service.CloudinaryService cloudinary;
 @inject IWebHostEnvironment Environment
 
-@if (string.IsNullOrEmpty(name))
+@if (string.IsNullOrEmpty(LoggedUserName))
 {
     <div class="alert alert-warning" role="alert">
         <h2>You have no access to account info. Log in first.</h2>
@@ -98,7 +98,7 @@ else
         name ??= LoggedUserName;
         if (!string.IsNullOrEmpty(name)){
             user = await userServ.Get(name);
-            _isOwner = LoggedUserName.ToLower().Equals(user.UserName.ToLower());
+            _isOwner = LoggedUserName is null? false : LoggedUserName.ToLower().Equals(user.UserName.ToLower());
             PostToNewLevel = (int)(10 * Math.Pow(1.2, user.Level));
             MinPostsForCurrentLevel = user.Level <= 1 ? 0 : (int)(10 * Math.Pow(1.2, user.Level - 1));
             StyleWidth = string.Format("width: {0}%", (int)((double)(user.PostedTimes - MinPostsForCurrentLevel) / PostToNewLevel * 100));

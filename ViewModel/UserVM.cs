@@ -25,11 +25,14 @@ namespace UserCollectionBlaz.ViewModel
             Level = user.Level;
             PostedTimes = user.PostedTimes;
             AvatarSrc = user.AvatarSrc;
+            IsAdmin = user.IsAdmin;
         }
 
         public object Clone()
         {
-            return this.MemberwiseClone();
+            return MemberwiseClone();
         }
+
+        public bool IsAdmin { get; set; }
     }
 }
