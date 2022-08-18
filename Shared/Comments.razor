@@ -104,5 +104,5 @@
         }
     }
 
-    private void NavigateTo(string userName) => navigationManager.NavigateTo("profile/"+userName);
+    private void NavigateTo(string userName) => navigationManager.ToAbsoluteUri("profile/"+userName);
 }

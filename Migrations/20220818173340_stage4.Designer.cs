@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UserCollectionBlaz.Areas.Identity.Data;
 
@@ -11,9 +12,10 @@ using UserCollectionBlaz.Areas.Identity.Data;
 namespace UserCollectionBlaz.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220818173340_stage4")]
+    partial class stage4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -170,12 +172,6 @@ namespace UserCollectionBlaz.Migrations
                     b.Property<string>("AvatarSrc")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<TimeSpan>("BanLasts")
-                        .HasColumnType("time");
-
-                    b.Property<DateTime>("BannedSince")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -188,9 +184,6 @@ namespace UserCollectionBlaz.Migrations
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsAdmin")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsBlocked")
                         .HasColumnType("bit");
 
                     b.Property<int>("Level")

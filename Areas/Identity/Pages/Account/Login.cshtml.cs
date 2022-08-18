@@ -111,7 +111,14 @@ namespace UserCollectionBlaz.Areas.Identity.Pages.Account
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Name, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var user = await _signInManager.UserManager.FindByNameAsync(Input.Name);
+                if (user.IsBlocked)
+                {
+                    _logger.LogWarning("User is banned and can't login");
+                    ModelState.AddModelError(string.Empty, "You banned (" + user.BannedSince + ") for " + user.BanLasts);
+                    return Page();
+                }
+                var result = await _signInManager.PasswordSignInAsync(user, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");

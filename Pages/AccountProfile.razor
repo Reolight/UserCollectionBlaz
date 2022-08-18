@@ -5,13 +5,7 @@
 @inject UserCollectionBlaz.Service.CloudinaryService cloudinary;
 @inject IWebHostEnvironment Environment
 
-@if (string.IsNullOrEmpty(LoggedUserName))
-{
-    <div class="alert alert-warning" role="alert">
-        <h2>You have no access to account info. Log in first.</h2>
-    </div>
-}
-else if (user is null)
+@if (user is null)
 {
     <div class="alert alert-danger" role="alert">
         <h2>This user is not accessible</h2>
@@ -28,7 +22,7 @@ else
                 Edit profile
             </button>
             } 
-            else 
+            else if (!string.IsNullOrEmpty(LoggedUserName))
             {
                 <button class="btn btn-outline-success">Laik</button>
             }

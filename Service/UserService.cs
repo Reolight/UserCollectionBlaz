@@ -9,10 +9,12 @@ namespace UserCollectionBlaz.Service
     {
         private readonly AppDbContext dbContext;
         private readonly UserManager<AppUser> userManager;
-        public UserService(AppDbContext appDb, UserManager<AppUser> manager)
+        private readonly SignInManager<AppUser> signInManager;
+        public UserService(AppDbContext appDb, UserManager<AppUser> manager, SignInManager<AppUser> signInManager)
         {
             dbContext = appDb;
             userManager = manager;
+            this.signInManager = signInManager;
         }
 
         /// <summary>
@@ -47,7 +49,7 @@ namespace UserCollectionBlaz.Service
             dbContext.SaveChanges();
             return lvled;
         }
-
+        
         public async Task<IdentityResult> Update(UserVM userVM)
         {
             AppUser user = await userManager.FindByNameAsync(userVM.UserName);
@@ -55,6 +57,25 @@ namespace UserCollectionBlaz.Service
             user.Email = userVM.Email;
             user.AvatarSrc = userVM.AvatarSrc;
             return await userManager.UpdateAsync(user);
+        }
+
+        public async Task<bool> AdminPowerChange(string maybeLuckyUser)
+        {
+            AppUser user = await userManager.FindByNameAsync(maybeLuckyUser);
+            if (user == null) return false;
+            user.IsAdmin = !user.IsAdmin;
+            return true;
+        }
+        public async Task<bool> BanHummer(string unluckyUser) => await BanHummerAsync(unluckyUser, new TimeSpan(0, 2, 28));
+
+        public async Task<bool> BanHummerAsync(string unluckyUser, TimeSpan banLasts)
+        {
+            AppUser user = await userManager.FindByNameAsync(unluckyUser);
+            if (user == null) return false;
+            user.BannedSince = DateTime.Now;
+            user.BanLasts = banLasts;
+            user.IsBlocked = true;
+            return true;
         }
     }
 }
