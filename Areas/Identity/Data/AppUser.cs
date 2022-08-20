@@ -20,4 +20,3 @@ public class AppUser : IdentityUser
     public ICollection<Comment> Comments { get; set; }
     public List<Collection> Collections { get; set; }
 }
-

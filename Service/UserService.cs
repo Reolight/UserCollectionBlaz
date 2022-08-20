@@ -46,7 +46,7 @@ namespace UserCollectionBlaz.Service
                 lvled = true;
             }
 
-            dbContext.SaveChanges();
+            await dbContext.SaveChangesAsync();
             return lvled;
         }
         

@@ -21,6 +21,7 @@ namespace UserCollectionBlaz.ViewModel
             Description = item.Description;
             ImageSrc = item.ImageSrc;
             collection = collectionVM;
+            AdditionalFields = Service.CollectionService.UncompressAdditionalFields(item.AdditionalFields);
         }
     }
 }

@@ -6,7 +6,6 @@ namespace UserCollectionBlaz.ViewModel
 {
     public class ComVM
     {
-        [Required]
         public int Id { get; set; }
         [Required]
         public string PlaceUrl { get; set; }

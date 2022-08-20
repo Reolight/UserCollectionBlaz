@@ -1,5 +1,23 @@
-﻿<h3>Collection</h3>
+﻿@using UserCollectionBlaz.ViewModel
+
+<div class="bg-gradient bg-opacity-25 bg-secondary container shadow">
+    <h4 class="ps-5">@collection.Name</h4>
+    <p>by @collection.Owner</p>
+    @foreach(ItemVM item in collection.Items){
+        <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
+            <img class="card-img-top" src=@item.ImageSrc alt=@item.Name />
+            <div class="card-body">
+                <h5 class="card-title">@item.Name</h5>
+                <p class="card-text">@item.Description</p>
+                @foreach (string field in item.AdditionalFields.Keys){
+                    <p class="card-text">@field - @item.AdditionalFields[field]</p>
+                }
+                <a href="#" class="btn btn-primary">Go somewhere</a>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
-
+    [Parameter] public CollectionVM collection { get; set; }
 }
