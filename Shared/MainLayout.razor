@@ -6,36 +6,66 @@
 
 <PageTitle>UserCollectionBlaz</PageTitle>
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="page flex flex-column">
 
     <header>
-        <div class="d-flex flex-row-reverse">
-            @if (user is null)
-            {
-                <NavLink class="nav-link" Match="NavLinkMatch.All" href="account/register">
-                    Register
-                </NavLink>
-                <NavLink class="nav-link" Match="NavLinkMatch.All" href="account/login">
-                    Login
-                </NavLink>
-            }
-            else
-            {
-                <NavLink class="nav-link" href=@ProfileUrl data-toggle="tooltip" data-placement="top" title=@string.Format("Lv.{0}\nPosted: {1}", user.Level, user.PostedTimes)>
-                    <img class="rounded-circle" width="40" src=@user.AvatarSrc>
-                    @user.UserName
-                </NavLink>
-                <NavLink class="nav-link" Match="NavLinkMatch.All" href="account/logout">
-                    Logout
-                </NavLink>
-            }
-            <NavLink class="nav-link">
-                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-            </NavLink>
-        </div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Navbar</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler6" aria-controls="" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarToggler6">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/">Home</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="another">Another</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link disabled" href="#">Disabled</a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            @if (user is not null)
+                            {
+                                <img src=@user.AvatarSrc width="32" height="32" class="align-middle d-inline-flex flex-row rounded-circle" />
+                            }
+                            <a class="align-middle d-inline-flex dropdown-toggle active nav-link" id="navbarDropdownMenuLink7" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                @if (user is null)
+                                {
+                                    <p>Account</p>
+                                } 
+                                else 
+                                { 
+                                    @user.UserName 
+                                }
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink7">
+                                if (user is null){
+                                <a class="dropdown-item" href="account/register">Register</a>
+                                <a class="dropdown-item" href="account/login">Login</a>
+                                }
+                                else
+                                {
+                                <a class="dropdown-item" href=@ProfileUrl>Profile</a>
+                                <a class="dropdown-item" href="account/logout">Logout</a>
+                                }
+                            </div>
+                        </li>
+                    </ul>
+
+                    <form class="d-flex">
+                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
+                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    </form>
+                </div>
+            </div>
+        </nav>
     </header>
 
     <main>

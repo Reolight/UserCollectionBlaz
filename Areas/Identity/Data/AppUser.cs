@@ -18,5 +18,6 @@ public class AppUser : IdentityUser
     public int PostedTimes { get; set; }
     public int Level { get; set; } = 1;
     public ICollection<Comment> Comments { get; set; }
+    public List<Collection> Collections { get; set; }
 }
 

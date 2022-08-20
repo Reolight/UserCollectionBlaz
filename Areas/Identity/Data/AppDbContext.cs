@@ -18,5 +18,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
         builder.Entity<Comment>()
             .HasOne(comment => comment.Autor)
             .WithMany(user => user.Comments);
+        builder.Entity<Item>()
+            .HasOne(item => item.collection)
+            .WithMany(col => col.Items);
     }
 }
