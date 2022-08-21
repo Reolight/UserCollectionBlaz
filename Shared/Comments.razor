@@ -1,38 +1,51 @@
-﻿@using UserCollectionBlaz.Areas.Identity.Data
+﻿@using Microsoft.AspNetCore.Identity
+@using UserCollectionBlaz.Areas.Identity.Data
 @using Microsoft.AspNetCore.SignalR.Client
 @using UserCollectionBlaz.ViewModel
 @inject IHttpContextAccessor httpAccessor
 @inject UserCollectionBlaz.Service.ComService commentsService
 @inject UserCollectionBlaz.Service.UserService userService
 @inject NavigationManager navigationManager
+@inject UserManager<AppUser> userManager
 @implements IAsyncDisposable
 
-   
-        <div class="container">
-            @if (User is not null)
-            {
-            <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto shadow w-100 mb-5 mt-5">
-                <img src=@User.AvatarSrc class="d-inline-flex flex-row rounded-circle" data-bs-placement="top" width="64" height="64" alt="Avatar"/>
-                <div class="d-flex flex-column">
-                    <div class="ps-3 w-100">
-                        <div class="d-inline-flex flex-row">
-                            <header class="d-inline-flex flex-row"><b>@User.UserName</b><span class="badge bg-success ms-2 mt-1">@User.Level</span>
-                            </header>
-                        </div>
+
+<div class="container">
+    @if (User is not null)
+    {
+        <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto shadow w-100 mb-5 mt-5">
+            <img src=@User.AvatarSrc class="d-inline-flex flex-row rounded-circle" data-bs-placement="top" width="64" height="64" alt="Avatar" />
+            <div class="d-flex flex-column">
+                <div class="ps-3 w-100">
+                    <div class="d-inline-flex flex-row">
+                        <header class="d-inline-flex flex-row">
+                            <b>@User.UserName</b><span class="badge bg-success ms-2 mt-1">@User.Level</span>
+                        </header>
                     </div>
-                    <textarea @bind="CurrentContent" placeholder="Enter your comment" class="w-100"></textarea>
                 </div>
+                <textarea @bind="CurrentContent" placeholder="Enter your comment" class="w-100"></textarea>
+                <button class="btn btn-outline-success" @onclick="() => Post()" disabled=@isPosting>Post comment</button>
             </div>
-            }
-            else{
-            <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto shadow w-100">
-                <p class="comment-text">Log in to leave a comment</p>
-            </div>
-            }
-            @foreach (Comment comment in PostedComments)
-            {
+        </div>
+    }
+    else
+    {
+        <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto shadow w-100">
+            <p class="comment-text">Log in to leave a comment</p>
+        </div>
+    }
+    @if (PostedComments is null || PostedComments.Count == 0)
+    {
+        <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto shadow w-100">
+            <p class="comment-text">There are no comments yet</p>
+        </div>
+    }
+    else
+    {
+        @foreach (Comment comment in PostedComments)
+        {
             <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row shadow w-100 mb-3 mt-3">
-                <img src=@comment.Autor.AvatarSrc class="d-inline-flex flex-row rounded-circle" data-bs-placement="top" width="64" height="64" alt="Avatar"/>
+                <img src=@comment.Autor.AvatarSrc class="d-inline-flex flex-row rounded-circle" data-bs-placement="top" width="64" height="64" alt="Avatar" />
                 <div class="ps-3">
                     <div class="d-inline-flex flex-row">
                         <header class="d-inline-flex flex-row">
@@ -40,13 +53,14 @@
                             <span class="badge bg-success ms-2 mt-1">@comment.Autor.Level</span>
                         </header>
                     </div>
-                    <figure> 
-                        <blockquote class="blockquote"> 
-                            <p>@comment.Content</p> 
-                        </blockquote>                         
+                    <figure>
+                        <blockquote class="blockquote">
+                            <p>@comment.Content</p>
+                        </blockquote>
 
-                        <figcaption class="blockquote-footer"> Posted <cite title="Source Title">@comment.PostedTime</cite> 
-                        </figcaption>                         
+                        <figcaption class="blockquote-footer">
+                            Posted <cite title="Source Title">@comment.PostedTime</cite>
+                        </figcaption>
                     </figure>
                     <div class="d-inline-flex flex-row">
                         <p class="align-middle">0</p>
@@ -54,8 +68,9 @@
                     </div>
                 </div>
             </div>
-            }
-        </div>
+        }
+    }
+</div>
 
 
 @code {
@@ -63,7 +78,7 @@
     private string? UrlKey;
     private string? CurrentContent;
     private HubConnection? hubConnection;
-    private List<Comment>? PostedComments;
+    private List<Comment>? PostedComments = new List<Comment>();
     private bool isPosting;
     private bool isHubConnected => hubConnection?.State == HubConnectionState.Connected;
 
@@ -75,10 +90,9 @@
         hubConnection = new HubConnectionBuilder()
             .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
             .Build();
-        hubConnection.On<Comment>("RecieveCom", (comment) =>
-        {
+        hubConnection.On<Comment>("RecieveCom", (comment) =>{
             PostedComments.Add(comment);
-            InvokeAsync(StateHasChanged);
+            PostedComments.OrderByDescending(com => com.PostedTime);
         });
 
         await hubConnection.StartAsync();
@@ -88,14 +102,18 @@
     {
         if (hubConnection is not null)
         {
-            await hubConnection.SendAsync("PostCom",
-                new ComVM()
-                    {
-                        AutorId = User.UserName,
-                        Content = CurrentContent,
-                        PlaceUrl = UrlKey
-                    });
+            Comment comment = new Comment()
+                {
+                    Autor = await userManager.FindByNameAsync(User.UserName),
+                    PlaceUrl = UrlKey,
+                    Content = CurrentContent,
+                    PostedTime = DateTime.Now
+                };
+            await hubConnection.SendAsync("PostCom", comment);
+            await userService.HavePostedAnotherOne(User);
             CurrentContent = string.Empty;
+            commentsService.Add(comment);
+            //StateHasChanged();
         }
     }
 
@@ -107,5 +125,5 @@
         }
     }
 
-    private void NavigateTo(string userName) => navigationManager.ToAbsoluteUri("profile/"+userName);
+    private void NavigateTo(string userName) => navigationManager.ToAbsoluteUri("profile/" + userName);
 }

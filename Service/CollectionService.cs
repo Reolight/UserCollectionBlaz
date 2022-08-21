@@ -30,7 +30,7 @@ namespace UserCollectionBlaz.Service
 
             return collectionVMs;
         }
-        public async Task<CollectionVM?> GetCollectionVMAsync(int Id)
+        public async Task<CollectionVM?> GetCollectionVMAsync(int? Id)
         {
             Collection? collection = await (from col in _context.Collections
                                             where col.Id == Id

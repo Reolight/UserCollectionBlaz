@@ -35,19 +35,26 @@ namespace UserCollectionBlaz.Service
             return userManager.Users.ToList();
         }
 
+        private bool IsLevelRequirementsAchieved(AppUser user)
+        {
+            int levelRequirements = 0;
+            for (int i = 2; i == user.Level; i++)
+                levelRequirements += (int)(10 * Math.Pow(1.2, i));
+            if (user.PostedTimes >= levelRequirements)
+            {
+                user.Level++;
+                dbContext.SaveChanges();
+            }
+            return user.PostedTimes >= levelRequirements;
+        }
+
+        public async Task<bool> HavePostedAnotherOne(UserVM user) 
+            => await HavePostedAnotherOne(await userManager.FindByNameAsync(user.UserName));
         public async Task<bool> HavePostedAnotherOne(AppUser user)
         {
             if (user.Level == 0) user.Level = 1;
-            bool lvled = false;
             user.PostedTimes++;
-            if (user.PostedTimes == (int)(10 * Math.Pow(1.2, user.Level)))
-            {
-                user.Level++;
-                lvled = true;
-            }
-
-            await dbContext.SaveChangesAsync();
-            return lvled;
+            return IsLevelRequirementsAchieved(user);
         }
         
         public async Task<IdentityResult> Update(UserVM userVM)

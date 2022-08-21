@@ -1,4 +1,10 @@
-﻿@using UserCollectionBlaz.ViewModel
+﻿@using Microsoft.AspNetCore.Identity
+@using UserCollectionBlaz.Areas.Identity.Data
+@using UserCollectionBlaz.ViewModel
+@inject UserManager<AppUser> userManager
+@inject IHttpContextAccessor httpAccessor
+@inject Service.CollectionService collectionService
+
 
 <div class="bg-gradient bg-opacity-25 bg-secondary container shadow">
     <h4 class="ps-5">@collection.Name</h4>
@@ -16,8 +22,24 @@
             </div>
         </div>
     }
+    @if (_isOwner)
+    {
+        <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
+            <img class="card-img-top" alt="Add another item" />
+            <div class="card-body">
+                <a href="" class="btn btn-primary">Add</a>
+        </div>
+    </div>
+    }
 </div>
 
 @code {
     [Parameter] public CollectionVM collection { get; set; }
+    private AppUser? CurrentUser;
+    private bool _isOwner;
+
+    protected override async void OnInitialized(){
+        CurrentUser = await userManager.FindByNameAsync(httpAccessor.HttpContext.User.Identity.Name);
+        _isOwner = CurrentUser.UserName == collection.Owner;
+    }
 }

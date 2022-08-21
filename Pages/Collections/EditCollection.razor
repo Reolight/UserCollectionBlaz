@@ -1,0 +1,147 @@
+﻿@page "/collection/new"
+@page "/collection/edit/{CollectionID}"
+
+@using UserCollectionBlaz.ViewModel
+@inject IHttpContextAccessor httpAccessor
+@inject Service.CollectionService collectionService
+
+@if (CollectionID is null) {
+        <h3>Add collection</h3>
+      } else {
+          <h3>Edit collection</h3>
+      }
+
+<body>
+        <div class="container m-5">
+            @if (EditableCollection is not null)
+            {
+                <EditForm Model="@EditableCollection" OnInvalidSubmit="@SaveCollection">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary/>
+
+                <div class="align-items-start d-inline-flex flex-column w-75">
+                    <div class="d-inline-flex flex-column justify-content-start w-100">
+                        <label for="formInput19" class="form-label mt-5">Collection name</label>
+                        <div class="input-group mb-3"> 
+                            <input type="text" @bind="EditableCollection.Name" class="form-control" placeholder="Collection name" aria-label="Collection name" aria-describedby="basic-addon1"/> 
+                        </div>
+
+                        <label for="formInput19" class="form-label mt-5">Collection type</label>
+                        <div class="input-group mb-3">
+                            <input type="text" @bind="EditableCollection.ItemType" class="form-control" placeholder="Collection type" aria-label="Collection type" aria-describedby="basic-addon1" />
+                        </div>
+
+                        <div class="mb-3">                          
+                            <textarea class="form-control" @bind="EditableCollection.Description" id="formInput19" rows="3" placeholder="CollectionDescriprion">
+
+                            </textarea> 
+                        </div>
+
+                        <label for="formInput19" class="form-label mt-5">Example textarea</label>
+                        <div class="input-group mb-3"> 
+                            <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1"/> 
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" @bind="EditableCollection.IsPrivate" value="" id="flexCheckDefault"/>
+                            <label class="form-check-label" for="flexCheckDefault">
+                                Is private
+                            </label>
+                        </div>
+
+                    @foreach (string key in EditableCollection.AdditionalFieldsInfo.Keys){
+                    <div class="input-group mb-3">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">key</button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" @onclick="() => EditableCollection.AdditionalFieldsInfo[key]=FieldTypes[0]">String</a>
+                            </li>
+                            <li>
+                                    <a class="dropdown-item" @onclick="() => EditableCollection.AdditionalFieldsInfo[key]=FieldTypes[1]">Text</a>
+                            </li>
+                            <li>
+                                    <a class="dropdown-item" @onclick="() => EditableCollection.AdditionalFieldsInfo[key]=FieldTypes[3]">Number</a>
+                            </li>
+                            <li>
+                                    <a class="dropdown-item" @onclick="() => EditableCollection.AdditionalFieldsInfo[key]=FieldTypes[2]">Boolean</a>
+                            </li>
+                            <li>
+                                    <a class="dropdown-item" @onclick="() => EditableCollection.AdditionalFieldsInfo[key]=FieldTypes[4]">Date</a>
+                            </li>
+                        </ul>
+                        <input type="text" class="form-control" disabled="disabled" value="@EditableCollection.AdditionalFieldsInfo[key]"
+                           aria-label="Text input with dropdown button" />
+                        <button @onclick="() => RemoveField(key)"></button>
+                    </div>
+                    }
+
+                        <div class="input-group mb-3">
+                            <button class="btn btn-outline-secondary dropdown-toggle active" type="button" data-bs-toggle="dropdown" aria-expanded="true">@NewAdditionalFieldType</button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[0]">String</a>
+                                </li>
+                                <li>
+                                <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[1]">Text</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[3]">Number</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[2]">Boolean</a>
+                                </li>
+                                <li>
+                                <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[4]">Date</a>
+                                </li>
+                            </ul>
+                            <input type="text" class="form-control" @onkeypress="@KeyPressed" @bind=@NewAdditionalFieldName
+                                aria-label="Text input with dropdown button" placeholder="Choose type of the field, enter name here and press Enter"/>
+                        </div>
+                        <button class="btn btn-outline-light" type="submit">
+                            Save collection
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+            }
+        </div>
+</body>
+
+@code {
+    [Parameter] public int? CollectionID { get; set; }
+    public CollectionVM EditableCollection { get; set; }
+    //[Parameter] public EventCallback<bool> OnFinished { get; set; }
+    private bool _isLoading;
+    private bool _wasNull;
+    private string? UserName { get; set; }
+
+    private string[] FieldTypes = { "string", "text", "bool", "int", "date" };
+    private string? NewAdditionalFieldType;
+    private string? NewAdditionalFieldName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserName = httpAccessor.HttpContext.User.Identity.Name;
+        if (CollectionID is not null) EditableCollection = await collectionService.GetCollectionVMAsync(CollectionID);
+        _wasNull = EditableCollection is null;
+        EditableCollection ??= new() { Owner = UserName, AdditionalFieldsInfo = new () };
+    }
+    private void OnSelected(string selected) => NewAdditionalFieldType = selected;
+    private void KeyPressed(KeyboardEventArgs e){
+        if (e.Code == "Enter"){
+            if (NewAdditionalFieldType is not null && !string.IsNullOrEmpty(NewAdditionalFieldName)){
+                EditableCollection.AdditionalFieldsInfo.Add(NewAdditionalFieldName, NewAdditionalFieldType);
+                NewAdditionalFieldName = NewAdditionalFieldType = "";
+            }
+        }
+    }
+    private void RemoveField(string key) => EditableCollection.AdditionalFieldsInfo.Remove(key);
+    private async void SaveCollection(){
+        if (EditableCollection is null) return;
+        if (_wasNull){
+            await collectionService.AddCollectionAsync(EditableCollection);
+        } else {
+            await collectionService.EditCollectionAsync(EditableCollection);
+        }
+    }
+}

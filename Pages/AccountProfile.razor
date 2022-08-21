@@ -1,9 +1,11 @@
 ﻿@page "/profile/{name}"
-@using UserCollectionBlaz.ViewModel;
+@using UserCollectionBlaz.Pages.Collections
+@using UserCollectionBlaz.ViewModel
 @inject IHttpContextAccessor httpAccessor;
 @inject UserCollectionBlaz.Service.UserService userServ;
 @inject UserCollectionBlaz.Service.CloudinaryService cloudinary;
 @inject IWebHostEnvironment Environment
+@inject Service.CollectionService collectionService
 
 @if (user is null)
 {
@@ -13,27 +15,30 @@
 }
 else
 {
-    <p><b>@user.UserName</b></p>
-    <div class="card" style="width: 18rem;">
-        <img src=@user.AvatarSrc class="card-img-top rounded-circle" alt="..." width="120">
-        <div class="card-body">
-            @if(_isOwner){
-            <button type="button" class="btn btn-outline-dark" @onclick="EditModeSwitch">
-                Edit profile
-            </button>
-            } 
-            else if (!string.IsNullOrEmpty(LoggedUserName))
-            {
-                <button class="btn btn-outline-success">Laik</button>
-            }
+    
+    <div class="card sidebar d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
+        <p><b>@user.UserName</b></p>
+        <div class="card" style="width: 18rem;">
+            <img src=@user.AvatarSrc class="card-img-top rounded-circle" alt="..." width="120">
+            <div class="card-body">
+                @if(_isOwner){
+                <button type="button" class="btn btn-outline-dark" @onclick="EditModeSwitch">
+                    Edit profile
+                </button>
+                } 
+                else if (!string.IsNullOrEmpty(LoggedUserName))
+                {
+                    <button class="btn btn-outline-success">Laik</button>
+                }
+            </div>
         </div>
-    </div>
 
-    <p> Level Lv.@user.Level</p>
-    <div class="progress">
-      <div class="progress-bar" role="progressbar" style=@StyleWidth aria-valuenow=@user.PostedTimes aria-valuemin=@MinPostsForCurrentLevel aria-valuemax=@PostToNewLevel></div>
+        <p> Level Lv.@user.Level</p>
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style=@StyleWidth aria-valuenow=@user.PostedTimes aria-valuemin=@MinPostsForCurrentLevel aria-valuemax=@PostToNewLevel></div>
+        </div>
+        <p>@(user.PostedTimes - MinPostsForCurrentLevel)/@PostToNewLevel</p>
     </div>
-    <p>@(user.PostedTimes - MinPostsForCurrentLevel)/@PostToNewLevel</p>
 
     @if (_isEditState){
         if (errors is not null){
@@ -66,6 +71,26 @@ else
             </button>
         </div>
     }
+
+    if (collections is null || collections.Count == 0){
+        <div class="bg-gradient bg-opacity-25 bg-secondary container shadow">
+            <h4 class="ps-5">There are no collections</h4>
+        </div>
+    }
+    else
+    {
+        @foreach (CollectionVM collection in collections)
+        {
+            <Collection collection=@collection/>
+        }
+    }
+
+    @if (_isOwner)
+    {
+        <a class="btn btn-outline-primary" href="/collection/new">
+            Add collection
+        </a>
+    }
 }
 
 @code {
@@ -80,11 +105,13 @@ else
     private string? LoggedUserName;
     private UserVM? EditUserData;
     private IBrowserFile Image;
+    private List<CollectionVM>? collections;
 
     private bool _isValidating;
     private bool _isEditState;
     private bool _isReady;
     private bool _isLoading;
+    private bool _isEditing;
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,12 +120,18 @@ else
         if (!string.IsNullOrEmpty(name)){
             user = await userServ.Get(name);
             _isOwner = LoggedUserName is null? false : LoggedUserName.ToLower().Equals(user.UserName.ToLower());
-            PostToNewLevel = (int)(10 * Math.Pow(1.2, user.Level));
-            MinPostsForCurrentLevel = user.Level <= 1 ? 0 : (int)(10 * Math.Pow(1.2, user.Level - 1));
+
+            int i;
+            for (i = 2; i <= user.Level; i++) 
+                PostToNewLevel += (int)(10 * Math.Pow(1.2, i));
+            for (i = 2; i < user.Level; i++)
+                MinPostsForCurrentLevel += (int)(10 * Math.Pow(1.2, i));
+
             StyleWidth = string.Format("width: {0}%", (int)((double)(user.PostedTimes - MinPostsForCurrentLevel) / PostToNewLevel * 100));
+
+            collections = await collectionService.GetCollectionVMsByAutor(name) ?? new();
         }
     }
-
     private async Task SaveChanges()
     {
         _isValidating = true;
@@ -119,7 +152,6 @@ else
 
         _isValidating = false;
     }
-
     private void EditModeSwitch()
     {
         errors = new();
@@ -129,7 +161,6 @@ else
             EditUserData = (UserVM) user.Clone();
         }
     }
-
     private void Upload(InputFileChangeEventArgs e)
     {
         _isLoading = true;

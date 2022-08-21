@@ -21,7 +21,10 @@ namespace UserCollectionBlaz.Service
 
         public Comment? Get(int id)
         {
-            return (from a in _context.comments where a.Id == id select a).First();
+            return (from a in _context.comments
+                    where a.Id == id 
+                    orderby a.PostedTime descending 
+                    select a).First();
         }
 
         public IEnumerable<Comment>? GetAll()

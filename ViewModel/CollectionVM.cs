@@ -1,5 +1,6 @@
 ﻿#nullable disable
 
+using System.ComponentModel.DataAnnotations;
 using UserCollectionBlaz.Areas.Identity.Data;
 
 namespace UserCollectionBlaz.ViewModel
@@ -7,8 +8,11 @@ namespace UserCollectionBlaz.ViewModel
     public class CollectionVM
     {
         public int Id { get; set; }
+        [Required, MinLength(3)]
         public string Name { get; set; }
+        [Required, MinLength(3), MaxLength(16)]
         public string ItemType { get; set; }
+        [Required, MaxLength(10)]
         public string Description { get; set; }
         public bool IsPrivate { get; set; }
         public string Owner { get; set; } //?
