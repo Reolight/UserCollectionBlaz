@@ -1,9 +1,10 @@
 ﻿@page "/collection/new"
-@page "/collection/edit/{CollectionID}"
+@page "/collection/edit/{CollectionID:int}"
 
 @using UserCollectionBlaz.ViewModel
 @inject IHttpContextAccessor httpAccessor
 @inject Service.CollectionService collectionService
+@inject NavigationManager navigationManager
 
 @if (CollectionID is null) {
         <h3>Add collection</h3>
@@ -15,7 +16,7 @@
         <div class="container m-5">
             @if (EditableCollection is not null)
             {
-                <EditForm Model="@EditableCollection" OnInvalidSubmit="@SaveCollection">
+                <EditForm Model="@EditableCollection" OnValidSubmit="@SaveCollection">
                     <DataAnnotationsValidator/>
                     <ValidationSummary/>
 
@@ -37,11 +38,6 @@
                             </textarea> 
                         </div>
 
-                        <label for="formInput19" class="form-label mt-5">Example textarea</label>
-                        <div class="input-group mb-3"> 
-                            <input type="text" class="form-control" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1"/> 
-                        </div>
-
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" @bind="EditableCollection.IsPrivate" value="" id="flexCheckDefault"/>
                             <label class="form-check-label" for="flexCheckDefault">
@@ -51,7 +47,7 @@
 
                     @foreach (string key in EditableCollection.AdditionalFieldsInfo.Keys){
                     <div class="input-group mb-3">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">key</button>
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">@EditableCollection.AdditionalFieldsInfo[key]</button>
                         <ul class="dropdown-menu">
                             <li>
                                 <a class="dropdown-item" @onclick="() => EditableCollection.AdditionalFieldsInfo[key]=FieldTypes[0]">String</a>
@@ -69,35 +65,43 @@
                                     <a class="dropdown-item" @onclick="() => EditableCollection.AdditionalFieldsInfo[key]=FieldTypes[4]">Date</a>
                             </li>
                         </ul>
-                        <input type="text" class="form-control" disabled="disabled" value="@EditableCollection.AdditionalFieldsInfo[key]"
+                        <input type="text" class="form-control" disabled="disabled" value="@key"
                            aria-label="Text input with dropdown button" />
-                        <button @onclick="() => RemoveField(key)"></button>
+                        <button type="button" class="btn btn-outline-danger" @onclick="() => RemoveField(key)">🗙</button>
                     </div>
+                    }
+                    @if (!string.IsNullOrEmpty(AdditionalFieldsErrors))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @AdditionalFieldsErrors
+                        </div>
                     }
 
                         <div class="input-group mb-3">
-                            <button class="btn btn-outline-secondary dropdown-toggle active" type="button" data-bs-toggle="dropdown" aria-expanded="true">@NewAdditionalFieldType</button>
+                            <button type="button" class="btn btn-outline-primary" @onclick="KeyPressed">Add: @NewAdditionalFieldType</button>
+                            <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                            </button>
                             <ul class="dropdown-menu">
                                 <li>
-                                <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[0]">String</a>
+                                    <button type="button" class="dropdown-item" @onclick="() => ChangeNewFieldType(0)">String</button>
                                 </li>
                                 <li>
-                                <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[1]">Text</a>
+                                    <button type="button" class="dropdown-item" @onclick="() => ChangeNewFieldType(1)">Text</button>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[3]">Number</a>
+                                    <button type="button" class="dropdown-item" @onclick="() => ChangeNewFieldType(3)">Number</button>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[2]">Boolean</a>
+                                    <button type="button" class="dropdown-item" @onclick="() => ChangeNewFieldType(2)">Boolean</button>
                                 </li>
                                 <li>
-                                <a class="dropdown-item" @onselectionchange="() => NewAdditionalFieldType=FieldTypes[4]">Date</a>
+                                    <button type="button" class="dropdown-item" @onclick="() => ChangeNewFieldType(4)">Date</button>
                                 </li>
                             </ul>
-                            <input type="text" class="form-control" @onkeypress="@KeyPressed" @bind=@NewAdditionalFieldName
-                                aria-label="Text input with dropdown button" placeholder="Choose type of the field, enter name here and press Enter"/>
+                            <input type="text" class="form-control" @bind=@NewAdditionalFieldName
+                                aria-label="Text input with dropdown button" placeholder="Choose type of the field and enter name of field here"/>
                         </div>
-                        <button class="btn btn-outline-light" type="submit">
+                        <button class="btn btn-light" type="submit" disabled=@_isSubmitting>
                             Save collection
                         </button>
                     </div>
@@ -112,12 +116,15 @@
     public CollectionVM EditableCollection { get; set; }
     //[Parameter] public EventCallback<bool> OnFinished { get; set; }
     private bool _isLoading;
+    private bool _isSubmitting;
     private bool _wasNull;
     private string? UserName { get; set; }
 
     private string[] FieldTypes = { "string", "text", "bool", "int", "date" };
     private string? NewAdditionalFieldType;
     private string? NewAdditionalFieldName;
+
+    private string AdditionalFieldsErrors;
 
     protected override async Task OnInitializedAsync()
     {
@@ -126,22 +133,39 @@
         _wasNull = EditableCollection is null;
         EditableCollection ??= new() { Owner = UserName, AdditionalFieldsInfo = new () };
     }
-    private void OnSelected(string selected) => NewAdditionalFieldType = selected;
-    private void KeyPressed(KeyboardEventArgs e){
-        if (e.Code == "Enter"){
-            if (NewAdditionalFieldType is not null && !string.IsNullOrEmpty(NewAdditionalFieldName)){
-                EditableCollection.AdditionalFieldsInfo.Add(NewAdditionalFieldName, NewAdditionalFieldType);
-                NewAdditionalFieldName = NewAdditionalFieldType = "";
-            }
+
+    private bool NewFieldValidation(){
+        AdditionalFieldsErrors = "";
+        AdditionalFieldsErrors += string.IsNullOrEmpty(NewAdditionalFieldType)? "New field must have a type! " : "";
+        AdditionalFieldsErrors += string.IsNullOrEmpty(NewAdditionalFieldName)? "New field must have a name!" : "";
+        return string.IsNullOrEmpty(AdditionalFieldsErrors);
+    }
+
+    private void KeyPressed(){
+        if (NewFieldValidation())
+        {
+            EditableCollection.AdditionalFieldsInfo.Add(NewAdditionalFieldName, NewAdditionalFieldType);
+            NewAdditionalFieldName = NewAdditionalFieldType = "";
         }
     }
+
     private void RemoveField(string key) => EditableCollection.AdditionalFieldsInfo.Remove(key);
+
     private async void SaveCollection(){
+        _isSubmitting = true;
         if (EditableCollection is null) return;
         if (_wasNull){
             await collectionService.AddCollectionAsync(EditableCollection);
         } else {
             await collectionService.EditCollectionAsync(EditableCollection);
         }
+
+        navigationManager.NavigateTo("profile/" + EditableCollection.Owner);
+        _isSubmitting = false;
+    }
+    
+    private void ChangeNewFieldType(byte type){
+        NewAdditionalFieldType = FieldTypes[type]; 
+        InvokeAsync(StateHasChanged);
     }
 }

@@ -4,11 +4,17 @@
 @inject UserManager<AppUser> userManager
 @inject IHttpContextAccessor httpAccessor
 @inject Service.CollectionService collectionService
+@inject NavigationManager navigationManager
 
 
-<div class="bg-gradient bg-opacity-25 bg-secondary container shadow">
-    <h4 class="ps-5">@collection.Name</h4>
-    <p>by @collection.Owner</p>
+<div class="bg-gradient bg-opacity-25 bg-secondary container shadow flex-column">
+        <h4 class="ps-5">@collection.Name</h4>
+        <p>by @collection.Owner</p>
+        <div class="btn-group" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
+            <button type="button" class="btn btn-primary">View</button>
+            <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
+        </div>
     @foreach(ItemVM item in collection.Items){
         <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
             <img class="card-img-top" src=@item.ImageSrc alt=@item.Name />
@@ -35,11 +41,16 @@
 
 @code {
     [Parameter] public CollectionVM collection { get; set; }
-    private AppUser? CurrentUser;
+    [Parameter] public AppUser? CurrentUser { get; set; }
     private bool _isOwner;
 
-    protected override async void OnInitialized(){
-        CurrentUser = await userManager.FindByNameAsync(httpAccessor.HttpContext.User.Identity.Name);
-        _isOwner = CurrentUser.UserName == collection.Owner;
+    protected override async void OnInitialized() => _isOwner = CurrentUser.UserName == collection.Owner;
+
+    private async void RemoveCollection() 
+    { 
+        await collectionService.RemoveCollectionAsync(collection); 
+        StateHasChanged(); 
     }
+
+    private void ToEditCollection(int id) => navigationManager.NavigateTo("/collection/edit/" + id.ToString());
 }

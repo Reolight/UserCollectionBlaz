@@ -42,7 +42,9 @@ namespace UserCollectionBlaz.Service
         }
         public async Task<List<CollectionVM>?> GetCollectionVMsByAutor(string name)
         {
-            List<Collection>? collections = (await userManager.FindByNameAsync(name)).Collections;
+            List<Collection>? collections = (from collection in _context.Collections
+                                            where collection.Owner.UserName == name 
+                                            select collection).ToList();
             return ConvertCollectionToVM(collections);
         }
         public async Task<List<CollectionVM>?> GetAllCollectionVMsAsync()
@@ -67,7 +69,8 @@ namespace UserCollectionBlaz.Service
             };
 
             _context.Collections.Add(collection);
-            await _context.SaveChangesAsync();
+            int info = _context.SaveChanges();
+            Console.WriteLine(info);
             return true;
         }
         public async Task<bool> RemoveCollectionAsync(CollectionVM collectionVM)
@@ -142,8 +145,9 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
-        public static Dictionary<string, string> UncompressAdditionalFields(string compressed)
+        public static Dictionary<string, string> UncompressAdditionalFields(string? compressed)
         {
+            if (string.IsNullOrEmpty(compressed)) return new();
             Dictionary<string, string> result = new();
             List<string> fields = new(compressed.Split(","));
             foreach (string field in fields)

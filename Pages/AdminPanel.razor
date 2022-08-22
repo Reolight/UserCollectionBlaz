@@ -62,7 +62,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        CurrentUser = await userServ.Get(httpAccessor.HttpContext.User.Identity.Name);
+        CurrentUser = await userServ.GetVM(httpAccessor.HttpContext.User.Identity.Name);
         Users = new List<AppUser>(userServ.GetAll());
     }
 

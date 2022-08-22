@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using UserCollectionBlaz.Areas.Identity.Data;
 using UserCollectionBlaz.ViewModel;
 
@@ -17,12 +18,21 @@ namespace UserCollectionBlaz.Service
             this.signInManager = signInManager;
         }
 
+        public AppUser? GetHeavyUser(string name)
+        {
+            var userData = (from user in dbContext.Users
+                            where user.UserName == name
+                            select user).Include(u => u.Collections).FirstOrDefault();
+            return userData;
+        }
+
         /// <summary>
         /// Use to get user view model. It is shorted version of AppUser
         /// </summary>
         /// <param name="name"></param>
         /// <returns>UserVM class by name</returns>
-        public async Task<UserVM?> Get(string name)
+        /// 
+        public async Task<UserVM?> GetVM(string name)
         {
             var userData = (from user in dbContext.Users
                        where user.UserName == name

@@ -82,7 +82,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        user = await userService.Get(HttpAccessor.HttpContext?.User.Identity?.Name);
+        user = await userService.GetVM(HttpAccessor.HttpContext?.User.Identity?.Name);
         if (user is not null ) ProfileUrl = "profile/" + user.UserName;
     }
 }

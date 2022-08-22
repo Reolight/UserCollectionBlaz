@@ -86,7 +86,7 @@
     {
         UrlKey = navigationManager.Uri.Replace(navigationManager.BaseUri, "");
         PostedComments = commentsService.GetAllByKey(UrlKey)?.ToList() ?? new();
-        User = await userService.Get(httpAccessor.HttpContext.User.Identity.Name);
+        User = await userService.GetVM(httpAccessor.HttpContext.User.Identity.Name);
         hubConnection = new HubConnectionBuilder()
             .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
             .Build();

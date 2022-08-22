@@ -1,4 +1,5 @@
 ﻿@page "/profile/{name}"
+@using UserCollectionBlaz.Areas.Identity.Data
 @using UserCollectionBlaz.Pages.Collections
 @using UserCollectionBlaz.ViewModel
 @inject IHttpContextAccessor httpAccessor;
@@ -6,6 +7,7 @@
 @inject UserCollectionBlaz.Service.CloudinaryService cloudinary;
 @inject IWebHostEnvironment Environment
 @inject Service.CollectionService collectionService
+@inject NavigationManager navigationManager
 
 @if (user is null)
 {
@@ -81,7 +83,7 @@ else
     {
         @foreach (CollectionVM collection in collections)
         {
-            <Collection collection=@collection/>
+            <Collection collection=@collection CurrentUser=@user />
         }
     }
 
@@ -96,7 +98,7 @@ else
 @code {
     [Parameter] public string? name { get; set; }
     private List<string> errors;
-    private UserVM? user;
+    private AppUser? user;
     private bool _isOwner;
     private string? UrlImg;
     private int PostToNewLevel;
@@ -118,7 +120,7 @@ else
         LoggedUserName = httpAccessor.HttpContext.User.Identity.Name;
         name ??= LoggedUserName;
         if (!string.IsNullOrEmpty(name)){
-            user = await userServ.Get(name);
+            user = userServ.GetHeavyUser(name);
             _isOwner = LoggedUserName is null? false : LoggedUserName.ToLower().Equals(user.UserName.ToLower());
 
             int i;
@@ -158,7 +160,7 @@ else
         _isEditState = !_isEditState;
         if (_isEditState){
             EditUserData = new();
-            EditUserData = (UserVM) user.Clone();
+            EditUserData = new UserVM(user);
         }
     }
     private void Upload(InputFileChangeEventArgs e)
