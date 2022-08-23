@@ -1,0 +1,168 @@
+﻿@page "/item/{CollectionId:int}/new"
+@page "/item/edit/{CollectionID:int}/{ItemId:int}"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using UserCollectionBlaz.ViewModel
+@inject IHttpContextAccessor httpAccessor
+@inject UserCollectionBlaz.Service.CollectionService collectionService
+@inject NavigationManager navigationManager
+@inject UserCollectionBlaz.Service.CloudinaryService cloudinary;
+
+@attribute [Authorize]
+
+<body>
+    <div class="container m-5">
+        @if (EditableItem is not null)
+        {
+            @if (ItemId is null)
+            {
+                <h3>Add item to @CollectionStorage.Name</h3>
+            }
+            else
+            {
+                <h3>Edit item of @CollectionStorage.Name</h3>
+            }
+            <EditForm Model="@EditableItem" OnValidSubmit="@SaveItem">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="align-items-start d-inline-flex flex-column w-75">
+                    <img src=@EditableItem.ImageSrc alt="ItemPic" width="512" /> <!-- IMAGE HERE -->
+                    <div class="d-inline-flex flex-column justify-content-start w-100">
+                        <label for="formInput19" class="form-label mt-5">Item name</label>
+                        <div class="input-group mb-3">
+                            <input type="text" @bind=@EditableItem.Name class="form-control" placeholder="Enter item name" aria-label="Item name" aria-describedby="basic-addon1" />
+                        </div>
+
+                        <label for="formInput19" class="form-label mt-3">Item description</label>
+                        <div class="mb-3">
+                            <textarea class="form-control" @bind=@EditableItem.Description id="formInput19" rows="3" placeholder="Tell us about your item"></textarea>
+                        </div>
+
+                        <div class="form-floating">
+                            <InputFile OnChange="@Upload" class="form-control form-control-lg" placeholder="Image" />
+                            <span asp-validation-for="Image" class="text-danger"></span>
+                        </div>
+
+                        @if (AdditionalValidationErrors.Count > 0){
+                            <div class="alert alert-danger" role="alert">
+                                <ul>
+                                    @foreach (string error in AdditionalValidationErrors){
+                                        <li>@error</li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+
+                        @if (CollectionStorage.AdditionalFieldsInfo.Count > 0){
+                            @foreach (string key in EditableItem.AdditionalFields.Keys)
+                            {
+                                @switch (CollectionStorage.AdditionalFieldsInfo[key])
+                                {
+                                    case "int":
+                                        <label for=@key>@key</label>
+                                        <input class="mb-3" type="number" @bind="EditableItem.AdditionalFields[key]" id=@key name=@key>
+                                        break;
+                                    case "string":
+                                        <label for=@key>@key</label>
+                                        <input class="mb-3" type="text" @bind="EditableItem.AdditionalFields[key]" id=@key name=@key>
+                                        break;
+                                    case "text":
+                                        <label for=@key class="form-label mt-3">@key</label>
+                                        <div class="mb-3">
+                                            <textarea class="form-control" @bind="EditableItem.AdditionalFields[key]" id=@key rows="3"></textarea>
+                                        </div>
+                                        break;
+                                    case "date":
+                                        <label for=@key>@key</label>
+                                        <input class="mb-3" type="date" @bind="AdditionalDateTimeFields[key]" id=@key name=@key>
+                                        break;
+                                    case "bool":
+                                        <div class="flex-row mb-3">
+                                            <input type="checkbox" @bind="EditableItem.AdditionalFields[key]" id=@key name=@key />
+                                            <label for=@key>@key</label>
+                                        </div>
+                                        break;
+                                }
+                            }
+                        }
+
+                        <button class="btn btn-light" type="submit" disabled=@_isSubmitting>
+                            Save item
+                        </button>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </div>
+</body>
+
+@code {
+    [Parameter] public int CollectionId { get; set; }
+    [Parameter] public int? ItemId { get; set; }
+    private ItemVM? EditableItem { get; set; }
+    private CollectionVM CollectionStorage { get; set; }
+    private IBrowserFile Image;
+
+    private List<string> AdditionalValidationErrors = new();
+    private Dictionary<string, DateTime> AdditionalDateTimeFields = new();
+    private bool _isSubmitting;
+    private bool _isLoading;
+    private bool _wasNull;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CollectionStorage = await collectionService.GetCollectionVMAsync(CollectionId);
+        if (CollectionStorage is null)
+            throw new ArgumentNullException("Collection storage is null, but it must have a value! [EditItem:OnInitializedAsync]");
+        EditableItem = ItemId is null ?
+            new ItemVM(CollectionStorage)
+            : (from itma in CollectionStorage.Items where itma.Id == ItemId select itma).FirstOrDefault();
+        EditableItem.AdditionalFields.Keys.Where(key => CollectionStorage.AdditionalFieldsInfo[key] == "date").ToList()
+                .ForEach(key => 
+                    {
+                        if (string.IsNullOrEmpty(EditableItem.AdditionalFields[key])) EditableItem.AdditionalFields[key] = DateTime.Now.ToString();
+                        AdditionalDateTimeFields.Add(key, DateTime.Parse(EditableItem.AdditionalFields[key]));
+                    });
+        _wasNull = ItemId is null;
+    }
+
+    private async void SaveItem()
+    {
+        if (!ValidateAdditionalFields()) return;
+        foreach (string key in AdditionalDateTimeFields.Keys){
+            EditableItem.AdditionalFields[key] = AdditionalDateTimeFields[key].ToString();
+        }
+        if (Image is not null && Image.Size > 0){
+            var imageUploadResult = await cloudinary.AddPhotoAsync(Image);
+            EditableItem.ImageSrc = imageUploadResult.Url.ToString();
+        }
+        if (_wasNull)
+        {
+            await collectionService.AddItemToCollectionAsync(EditableItem);
+        } else {
+            await collectionService.EditItemAsync(EditableItem);
+        }
+
+        navigationManager.NavigateTo("profile/" + CollectionStorage.Owner);
+    }
+
+    private bool ValidateAdditionalFields() {
+        AdditionalValidationErrors = new();
+        if (CollectionStorage.AdditionalFieldsInfo.Count == 0) return true;
+        foreach (string key in EditableItem.AdditionalFields.Keys.Where(key => key == "int")) {
+            int i;
+            if (!int.TryParse(EditableItem.AdditionalFields[key], out i))
+                AdditionalValidationErrors.Add(string.Format("{0} is not an integer (field '{1}')", EditableItem.AdditionalFields[key], key));
+        }
+
+        return AdditionalValidationErrors.Count == 0;
+    }
+
+    private async void Upload(InputFileChangeEventArgs e)
+    {
+        _isLoading = true;
+        Image = e.File;
+        _isLoading = false;
+    }
+}

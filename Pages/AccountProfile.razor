@@ -19,7 +19,9 @@ else
 {
     
     <div class="card sidebar d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
-        <p><b>@user.UserName</b></p>
+        <p class="flex-row"><b>@user.UserName</b>
+            <span class="badge bg-success ms-2 mt-1"> Lv. @user.Level</span>
+        </p>
         <div class="card" style="width: 18rem;">
             <img src=@user.AvatarSrc class="card-img-top rounded-circle" alt="..." width="120">
             <div class="card-body">
@@ -35,7 +37,6 @@ else
             </div>
         </div>
 
-        <p> Level Lv.@user.Level</p>
         <div class="progress">
           <div class="progress-bar" role="progressbar" style=@StyleWidth aria-valuenow=@user.PostedTimes aria-valuemin=@MinPostsForCurrentLevel aria-valuemax=@PostToNewLevel></div>
         </div>
@@ -134,6 +135,7 @@ else
             collections = await collectionService.GetCollectionVMsByAutor(name) ?? new();
         }
     }
+
     private async Task SaveChanges()
     {
         _isValidating = true;
@@ -154,6 +156,7 @@ else
 
         _isValidating = false;
     }
+
     private void EditModeSwitch()
     {
         errors = new();
@@ -163,6 +166,7 @@ else
             EditUserData = new UserVM(user);
         }
     }
+
     private void Upload(InputFileChangeEventArgs e)
     {
         _isLoading = true;

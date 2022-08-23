@@ -42,9 +42,9 @@ namespace UserCollectionBlaz.Service
         }
         public async Task<List<CollectionVM>?> GetCollectionVMsByAutor(string name)
         {
-            List<Collection>? collections = (from collection in _context.Collections
-                                            where collection.Owner.UserName == name 
-                                            select collection).ToList();
+            List<Collection>? collections = await (from collection in _context.Collections
+                                                    where collection.Owner.UserName == name
+                                                    select collection).ToListAsync();
             return ConvertCollectionToVM(collections);
         }
         public async Task<List<CollectionVM>?> GetAllCollectionVMsAsync()
@@ -107,9 +107,9 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> AddItemToCollectionAsync(CollectionVM collectionVM, ItemVM item)
+        public async Task<bool> AddItemToCollectionAsync(ItemVM item)
         {
-            Collection? collection = GetCollection(collectionVM);
+            Collection? collection = GetCollection(item.collection);
             if (collection is null) return false;
             collection.Items.Add(new Item
             {
@@ -132,9 +132,9 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> EditItemAsync(CollectionVM collectionVM, ItemVM itemVM)
+        public async Task<bool> EditItemAsync(ItemVM itemVM)
         {
-            Collection? collection = GetCollection(collectionVM);
+            Collection? collection = GetCollection(itemVM.collection);
             if (collection is null) return false;
             Item? item = collection.Items.Find(col => col.Id == itemVM.Id);
             if (item is null) return false;
@@ -160,6 +160,7 @@ namespace UserCollectionBlaz.Service
         }
         public static string CompressAdditionalFields(Dictionary<string, string> uncompressed)
         {
+            if (uncompressed is null || uncompressed.Count == 0) return "";
             List<string> compressed = new();
             foreach (string key in uncompressed.Keys)
             {
@@ -168,7 +169,7 @@ namespace UserCollectionBlaz.Service
 
             return string.Join(",", compressed);
         }
-        private Collection? GetCollection(CollectionVM collectionVM) => (from col in _context.Collections
+        private Collection? GetCollection(CollectionVM collectionVM) =>  (from col in _context.Collections
                                                                         where col.Id == collectionVM.Id
                                                                         select col).Include(col => col.Items).FirstOrDefault();
     }

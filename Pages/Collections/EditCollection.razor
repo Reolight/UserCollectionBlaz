@@ -6,6 +6,8 @@
 @inject Service.CollectionService collectionService
 @inject NavigationManager navigationManager
 
+@attribute [Authorize]
+
 @if (CollectionID is null) {
         <h3>Add collection</h3>
       } else {
@@ -32,8 +34,9 @@
                             <input type="text" @bind="EditableCollection.ItemType" class="form-control" placeholder="Collection type" aria-label="Collection type" aria-describedby="basic-addon1" />
                         </div>
 
-                        <div class="mb-3">                          
-                            <textarea class="form-control" @bind="EditableCollection.Description" id="formInput19" rows="3" placeholder="CollectionDescriprion">
+                        <div class="mb-3">
+                            <label for="formInput19" class="form-label mt-3">Collection description</label>
+                            <textarea class="form-control" @bind="EditableCollection.Description" id="formInput19" rows="3" placeholder="Collection descriprion">
 
                             </textarea> 
                         </div>
