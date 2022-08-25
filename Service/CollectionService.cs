@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using UserCollectionBlaz.Areas.Identity.Data;
 using UserCollectionBlaz.ViewModel;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace UserCollectionBlaz.Service
 {
@@ -44,7 +46,8 @@ namespace UserCollectionBlaz.Service
         {
             List<Collection>? collections = await (from collection in _context.Collections
                                                     where collection.Owner.UserName == name
-                                                    select collection).ToListAsync();
+                                                    select collection)
+                .Include(col => col.Items).ToListAsync();
             return ConvertCollectionToVM(collections);
         }
         public async Task<List<CollectionVM>?> GetAllCollectionVMsAsync()
@@ -122,10 +125,10 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> RemoveItemFromCollectionAsync(CollectionVM collectionVM, ItemVM delItem)
+        public async Task<bool> RemoveItemFromCollectionAsync(CollectionVM? collectionVM, ItemVM? delItem)
         {
             Collection? collection = GetCollection(collectionVM);
-            if (collection is null) return false;
+            if (collection is null || delItem is null) return false;
             Item? item = collection.Items.Find(itma => itma.Id == delItem.Id);
             await cloudinaryService.DeletePhotoAsync(item.ImageSrc);
             collection.Items.Remove(item);
@@ -145,29 +148,13 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
-        public static Dictionary<string, string> UncompressAdditionalFields(string? compressed)
-        {
-            if (string.IsNullOrEmpty(compressed)) return new();
-            Dictionary<string, string> result = new();
-            List<string> fields = new(compressed.Split(","));
-            foreach (string field in fields)
-            {
-                string[] KeyValue = field.Split(":");
-                result.Add(KeyValue[0], KeyValue[1]);
-            }
-
-            return result;
-        }
+        public static Dictionary<string, string> UncompressAdditionalFields(string? compressed) 
+            => JsonSerializer.Deserialize<Dictionary<string, string>>(compressed) ?? new();
+        
         public static string CompressAdditionalFields(Dictionary<string, string> uncompressed)
         {
             if (uncompressed is null || uncompressed.Count == 0) return "";
-            List<string> compressed = new();
-            foreach (string key in uncompressed.Keys)
-            {
-                compressed.Add(key + ":" + uncompressed[key]);
-            }
-
-            return string.Join(",", compressed);
+            return JsonSerializer.Serialize(uncompressed);
         }
         private Collection? GetCollection(CollectionVM collectionVM) =>  (from col in _context.Collections
                                                                         where col.Id == collectionVM.Id

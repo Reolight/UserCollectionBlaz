@@ -85,14 +85,14 @@
     protected override async Task OnInitializedAsync()
     {
         UrlKey = navigationManager.Uri.Replace(navigationManager.BaseUri, "");
-        PostedComments = commentsService.GetAllByKey(UrlKey)?.ToList() ?? new();
+        PostedComments = commentsService.GetAllByKey(UrlKey)?.OrderByDescending(com => com.PostedTime).ToList() ?? new();
         User = await userService.GetVM(httpAccessor.HttpContext.User.Identity.Name);
         hubConnection = new HubConnectionBuilder()
             .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
             .Build();
         hubConnection.On<Comment>("RecieveCom", (comment) =>{
-            PostedComments.Add(comment);
-            PostedComments.OrderByDescending(com => com.PostedTime);
+                                                                PostedComments.Add(comment);
+                                                                InvokeAsync(StateHasChanged);
         });
 
         await hubConnection.StartAsync();
@@ -102,18 +102,16 @@
     {
         if (hubConnection is not null)
         {
-            Comment comment = new Comment()
+            ComVM comment = new ComVM()
                 {
-                    Autor = await userManager.FindByNameAsync(User.UserName),
+                    AutorId = User.UserName,
                     PlaceUrl = UrlKey,
                     Content = CurrentContent,
-                    PostedTime = DateTime.Now
+                    Posted = DateTime.Now
                 };
             await hubConnection.SendAsync("PostCom", comment);
             await userService.HavePostedAnotherOne(User);
             CurrentContent = string.Empty;
-            commentsService.Add(comment);
-            //StateHasChanged();
         }
     }
 

@@ -1,5 +1,7 @@
 ﻿using UserCollectionBlaz.Areas.Identity.Data;
-using Microsoft.EntityFrameworkCore; 
+using Microsoft.EntityFrameworkCore;
+using UserCollectionBlaz.ViewModel;
+using Microsoft.AspNetCore.Identity;
 
 namespace UserCollectionBlaz.Service
 {
@@ -9,9 +11,22 @@ namespace UserCollectionBlaz.Service
     public class ComService : IService<Comment, int>
     {
         private readonly AppDbContext _context;
-        public ComService(AppDbContext context)
+        private readonly UserManager<AppUser> _userManager;
+        public ComService(AppDbContext context, UserManager<AppUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
+        }
+
+        public async void Add(ComVM comVM)
+        {
+            Add(new Comment()
+            {
+                Content = comVM.Content,
+                Autor = await _userManager.FindByNameAsync(comVM.AutorId),
+                PlaceUrl = comVM.PlaceUrl,
+                PostedTime = comVM.Posted
+            });
         }
         public void Add(Comment item)
         {

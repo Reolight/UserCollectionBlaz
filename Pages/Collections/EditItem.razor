@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using UserCollectionBlaz.ViewModel
+@using System.Globalization
 @inject IHttpContextAccessor httpAccessor
 @inject UserCollectionBlaz.Service.CollectionService collectionService
 @inject NavigationManager navigationManager
@@ -79,7 +80,7 @@
                                         break;
                                     case "bool":
                                         <div class="flex-row mb-3">
-                                            <input type="checkbox" @bind="EditableItem.AdditionalFields[key]" id=@key name=@key />
+                                            <input type="checkbox" @bind="AdditionalBooleanFields[key]" id=@key name=@key />
                                             <label for=@key>@key</label>
                                         </div>
                                         break;
@@ -106,6 +107,7 @@
 
     private List<string> AdditionalValidationErrors = new();
     private Dictionary<string, DateTime> AdditionalDateTimeFields = new();
+    private Dictionary<string, bool> AdditionalBooleanFields = new();
     private bool _isSubmitting;
     private bool _isLoading;
     private bool _wasNull;
@@ -118,11 +120,24 @@
         EditableItem = ItemId is null ?
             new ItemVM(CollectionStorage)
             : (from itma in CollectionStorage.Items where itma.Id == ItemId select itma).FirstOrDefault();
-        EditableItem.AdditionalFields.Keys.Where(key => CollectionStorage.AdditionalFieldsInfo[key] == "date").ToList()
+        EditableItem.AdditionalFields.Keys
+            .Where(key => CollectionStorage.AdditionalFieldsInfo[key] == "date" || CollectionStorage.AdditionalFieldsInfo[key] == "bool")
+            .ToList()
                 .ForEach(key => 
                     {
-                        if (string.IsNullOrEmpty(EditableItem.AdditionalFields[key])) EditableItem.AdditionalFields[key] = DateTime.Now.ToString();
-                        AdditionalDateTimeFields.Add(key, DateTime.Parse(EditableItem.AdditionalFields[key]));
+                        switch (@CollectionStorage.AdditionalFieldsInfo[key])
+                        {
+                            case "date":
+                                if (string.IsNullOrEmpty(EditableItem.AdditionalFields[key])) 
+                                    EditableItem.AdditionalFields[key] = DateTime.Now.ToString(CultureInfo.CurrentCulture);
+                                AdditionalDateTimeFields.Add(key, DateTime.Parse(EditableItem.AdditionalFields[key]));
+                                break;
+                            case "bool":
+                                if (string.IsNullOrEmpty(EditableItem.AdditionalFields[key]))
+                                    EditableItem.AdditionalFields[key] = "false";
+                                AdditionalBooleanFields.Add(key, bool.Parse(EditableItem.AdditionalFields[key]));
+                                break;;
+                        }
                     });
         _wasNull = ItemId is null;
     }
@@ -130,9 +145,21 @@
     private async void SaveItem()
     {
         if (!ValidateAdditionalFields()) return;
-        foreach (string key in AdditionalDateTimeFields.Keys){
-            EditableItem.AdditionalFields[key] = AdditionalDateTimeFields[key].ToString();
-        }
+        EditableItem.AdditionalFields.Keys
+            .Where(key => CollectionStorage.AdditionalFieldsInfo[key] == "date" || CollectionStorage.AdditionalFieldsInfo[key] == "bool")
+            .ToList()
+            .ForEach(key => {
+                                switch (@CollectionStorage.AdditionalFieldsInfo[key])
+                                {
+                                    case "date":
+                                        EditableItem.AdditionalFields[key] = AdditionalDateTimeFields[key].ToString(CultureInfo.CurrentCulture);
+                                        break;
+                                    case "bool":
+                                        EditableItem.AdditionalFields[key] = AdditionalBooleanFields[key].ToString();
+                                        break;;
+                                }
+
+            });
         if (Image is not null && Image.Size > 0){
             var imageUploadResult = await cloudinary.AddPhotoAsync(Image);
             EditableItem.ImageSrc = imageUploadResult.Url.ToString();
@@ -147,13 +174,25 @@
         navigationManager.NavigateTo("profile/" + CollectionStorage.Owner);
     }
 
-    private bool ValidateAdditionalFields() {
+    private bool ValidateAdditionalFields()
+    {
         AdditionalValidationErrors = new();
         if (CollectionStorage.AdditionalFieldsInfo.Count == 0) return true;
-        foreach (string key in EditableItem.AdditionalFields.Keys.Where(key => key == "int")) {
-            int i;
-            if (!int.TryParse(EditableItem.AdditionalFields[key], out i))
-                AdditionalValidationErrors.Add(string.Format("{0} is not an integer (field '{1}')", EditableItem.AdditionalFields[key], key));
+        foreach (string key in EditableItem.AdditionalFields.Keys)
+        {
+            switch (CollectionStorage.AdditionalFieldsInfo[key])
+            {
+                case "string":
+                case "text":            
+                    if (!string.IsNullOrWhiteSpace(EditableItem.AdditionalFields[key]))
+                        AdditionalValidationErrors.Add($"Field {key} must contain a value");
+                   break;
+                case "int":
+                    int i;
+                    if (!int.TryParse(EditableItem.AdditionalFields[key], out i))
+                        AdditionalValidationErrors.Add(string.Format("{0} is not an integer (field '{1}')", EditableItem.AdditionalFields[key], key));
+                    break;
+            }
         }
 
         return AdditionalValidationErrors.Count == 0;

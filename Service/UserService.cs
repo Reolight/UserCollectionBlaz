@@ -10,12 +10,11 @@ namespace UserCollectionBlaz.Service
     {
         private readonly AppDbContext dbContext;
         private readonly UserManager<AppUser> userManager;
-        private readonly SignInManager<AppUser> signInManager;
-        public UserService(AppDbContext appDb, UserManager<AppUser> manager, SignInManager<AppUser> signInManager)
+
+        public UserService(AppDbContext appDb, UserManager<AppUser> manager)
         {
             dbContext = appDb;
             userManager = manager;
-            this.signInManager = signInManager;
         }
 
         public AppUser? GetHeavyUser(string name)
@@ -47,15 +46,14 @@ namespace UserCollectionBlaz.Service
 
         private bool IsLevelRequirementsAchieved(AppUser user)
         {
-            int levelRequirements = 0;
-            for (int i = 2; i == user.Level; i++)
-                levelRequirements += (int)(10 * Math.Pow(1.2, i));
-            if (user.PostedTimes >= levelRequirements)
+            if (user.PostedTimes == UserVM.GetMaxPostForNewLevel(user.Level))
             {
                 user.Level++;
                 dbContext.SaveChanges();
+                return true;
             }
-            return user.PostedTimes >= levelRequirements;
+            
+            return false;
         }
 
         public async Task<bool> HavePostedAnotherOne(UserVM user) 
@@ -76,15 +74,23 @@ namespace UserCollectionBlaz.Service
             return await userManager.UpdateAsync(user);
         }
 
+        public async void UpdateLevel(string name, int level)
+        {
+            AppUser user = await userManager.FindByNameAsync(name);
+            user.Level = level;
+            user.PostedTimes = UserVM.GetMinPostForThisLevel(level);
+            await dbContext.SaveChangesAsync();
+        }
+
         public async Task<bool> AdminPowerChange(string maybeLuckyUser)
         {
             AppUser user = await userManager.FindByNameAsync(maybeLuckyUser);
             if (user == null) return false;
             user.IsAdmin = !user.IsAdmin;
+            await dbContext.SaveChangesAsync();
             return true;
         }
         public async Task<bool> BanHummer(string unluckyUser) => await BanHummerAsync(unluckyUser, new TimeSpan(0, 2, 28));
-
         public async Task<bool> BanHummerAsync(string unluckyUser, TimeSpan banLasts)
         {
             AppUser user = await userManager.FindByNameAsync(unluckyUser);

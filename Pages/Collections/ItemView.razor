@@ -1,0 +1,58 @@
+﻿@page "/item/{CollectionId:int}/{Id:int}"
+@using UserCollectionBlaz.ViewModel
+@using UserCollectionBlaz.Areas.Identity.Data
+@inject Service.CollectionService CollectionService;
+
+<body>
+@if (itemVm is not null)
+{
+    <div class="container d-inline-flex flex-column">
+        <div class="d-inline-flex mb-3 me-5 ms-5 mt-3">
+            <h3>@itemVm.Name</h3>
+        </div>
+        <div class="d-inline-flex flex-row">
+            <img src=@itemVm.ImageSrc alt=@itemVm.Name class="m-3 w-50"/>
+            <div class="w-50">
+                <p class="mt-5">@itemVm.Description</p>
+            </div>
+        </div>
+        @if (itemVm.AdditionalFields.Count > 0)
+        {
+            <div class="container d-inline-flex flex-column">
+                @foreach (string key in itemVm.AdditionalFields.Keys)
+                {
+                    @if (CollectionVM.AdditionalFieldsInfo[key] == "bool")
+                    {
+                        <input type="checkbox" @bind="itemVm.AdditionalFields[key]" disabled="disabled"/>
+                        <b>@(key):</b>
+                    }
+                    else
+                    {
+                        <p class="mb-3">
+                            <b>@(key):</b>
+                            @itemVm.AdditionalFields[key]
+                        </p>
+                    }
+                }
+            </div>
+        }
+    </div>
+
+    <Comments/>
+}
+</body>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    [Parameter] public int CollectionId { get; set; }
+    private ItemVM? itemVm;
+    private CollectionVM? CollectionVM;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CollectionVM = await CollectionService.GetCollectionVMAsync(CollectionId);
+        if (CollectionVM is not null)
+            itemVm = (from itma in CollectionVM.Items where itma.Id == Id select itma).FirstOrDefault();
+    }
+
+}

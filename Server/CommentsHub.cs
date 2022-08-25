@@ -18,6 +18,18 @@ namespace UserCollectionBlaz.Server
             _userManager = userManager;
         }
 
-        public async Task PostCom(Comment comment) => await Clients.All.SendAsync("RecieveCom", comment);
+        public async Task PostCom(ComVM comment)
+        {
+            Comment com = new Comment()
+            {
+                Content = comment.Content,
+                Autor = await _userManager.FindByNameAsync(comment.AutorId),
+                PlaceUrl = comment.PlaceUrl,
+                PostedTime = comment.Posted
+            };
+
+            _comService.Add(com);
+            await Clients.All.SendAsync("RecieveCom", com);
+        }
     }
 }

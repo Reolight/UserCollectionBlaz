@@ -1,13 +1,12 @@
 ﻿@page "/profile/{name}"
+@using UserCollectionBlaz.Service
 @using UserCollectionBlaz.Areas.Identity.Data
-@using UserCollectionBlaz.Pages.Collections
 @using UserCollectionBlaz.ViewModel
+@using UserCollectionBlaz.Pages.Collections
 @inject IHttpContextAccessor httpAccessor;
-@inject UserCollectionBlaz.Service.UserService userServ;
-@inject UserCollectionBlaz.Service.CloudinaryService cloudinary;
-@inject IWebHostEnvironment Environment
-@inject Service.CollectionService collectionService
-@inject NavigationManager navigationManager
+@inject UserService userServ;
+@inject CloudinaryService cloudinary;
+@inject CollectionService collectionService
 
 @if (user is null)
 {

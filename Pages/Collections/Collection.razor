@@ -11,20 +11,34 @@
         <h4 class="ps-5">@collection.Name</h4>
         <p>by @collection.Owner</p>
         <div class="btn-group" role="group" aria-label="Basic example">
-            <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
+            @if (_isOwner)
+            {
+                <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
+            }
             <button type="button" class="btn btn-primary">View</button>
-            <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
+            @if (_isOwner)
+            {
+                <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
+            }
         </div>
     @foreach(ItemVM item in collection.Items){
         <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
-            <img class="card-img-top w-25" src=@item.ImageSrc alt=@item.Name />
+            <img class="card-img-top w-50" src=@item.ImageSrc alt=@item.Name />
             <div class="card-body">
                 <h5 class="card-title">@item.Name</h5>
                 <p class="card-text">@item.Description</p>
                 @foreach (string field in item.AdditionalFields.Keys){
                     <p class="card-text">@field - @item.AdditionalFields[field]</p>
                 }
-                <a href="" class="btn btn-primary">Go somewhere</a>
+                @if (_isOwner){
+                    <a type="button" class="btn btn-primary" href=@($"/item/edit/{collection.Id}/{item.Id}")>Edit</a>
+                }
+                <a type="button" class="btn btn-primary" href=@($"/item/{collection.Id}/{item.Id}")>View</a>
+                @if (_isOwner)
+                {
+                    <button type="button" class="btn btn-primary" 
+                            @onclick="() => RemoveItem(item.Id)">Delete</button>
+                }
             </div>
         </div>
     }
@@ -52,6 +66,12 @@
         StateHasChanged(); 
     }
 
-    private void ToEditCollection(int id) => navigationManager.NavigateTo("/collection/edit/" + id.ToString());
-    private void ToCreateItem() => navigationManager.NavigateTo(string.Format("item/{0}/new", collection.Id));
+    private void ToEditCollection(int id) => navigationManager.NavigateTo("/collection/edit/" + id);
+    private void ToViewItem(int id) => navigationManager.NavigateTo("item/" + id);
+    private void ToCreateItem() => navigationManager.NavigateTo($"item/{collection.Id}/new");
+
+    private void RemoveItem(int id) =>
+        collectionService.RemoveItemFromCollectionAsync(
+            collection,
+            collection.Items.Find(itma => itma.Id == id));
 }

@@ -1,7 +1,8 @@
 ﻿@page "/account/users"
 @using UserCollectionBlaz.Areas.Identity.Data
 @using UserCollectionBlaz.ViewModel
-@inject UserCollectionBlaz.Service.UserService userServ;
+@using System.Drawing.Printing
+@inject Service.UserService userServ;
 @inject IHttpContextAccessor httpAccessor;
 @inject NavigationManager navigationManager;
 
@@ -14,6 +15,7 @@
             <th><input type="checkbox" id="CBAll" onclick="CheckedAll()"></th>
             <th>User name</th>
             <th>Posted times</th>
+            <th>Level</th>
             @if (CurrentUser is not null && CurrentUser.IsAdmin)
             {
                 <th>Email</th>
@@ -28,14 +30,19 @@
                     <th><input type="checkbox" name="CB" id=${user.Name} /></th>
                     <td><img @onclick="() => NavigateTo(user.UserName)" class="rounded-circle" src=@user.AvatarSrc width="32" height="32"/>@user.UserName</td>
                     <td>@user.PostedTimes</td>
+                    
                     @if (CurrentUser is not null && CurrentUser.IsAdmin){
+                        <input type="number" @bind="user.Level"/>
+                        <button class="btn btn-danger" @onclick="() => { userServ.UpdateLevel(user.UserName, user.Level); InvokeAsync(StateHasChanged);}">
+                            Save
+                        </button>
                         <td>@user.Email</td>
                         <td>
                             @if (user.IsAdmin) {
-                                <button class="btn btn-outline-dark" @onclick="()=>AdminChange(user.UserName)">
+                                <button class="btn btn-outline-dark" @onclick="() => { 
+                                AdminChange(user.UserName); if (CurrentUser.UserName == user.UserName) InvokeAsync(StateHasChanged); }">
                                     Deadminilize
                                 </button>
-                                <button class="btn btn-danger" @onclick="() => Ban(user.UserName) "></button>
                             }
                             else 
                             {
@@ -43,7 +50,12 @@
                                     Adminilize
                                 </button>
                             }
+                            <button class="btn btn-danger" @onclick="() => Ban(user.UserName) ">Ban him</button>
                         </td>
+                    }
+                    else
+                    {
+                        <td>@user.Level</td>
                     }
                 </tr>
             }

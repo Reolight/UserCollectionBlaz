@@ -18,6 +18,20 @@ namespace UserCollectionBlaz.ViewModel
         public string AvatarSrc { get; set; }
         public bool IsAdmin { get; set; }
         public bool IsBlocked { get; set; }
+
+        public static int GetMaxPostForNewLevel(int level)
+        {
+            int MaxPostForNewLevel = 0;
+            for (int i = 1; i <= level; i++) MaxPostForNewLevel += (int)(10 * Math.Pow(1.2, i - 1));
+            return MaxPostForNewLevel;
+        }
+
+        public static int GetMinPostForThisLevel(int level)
+        {
+            int MinPostForNewLevel = 0;
+            for (int i = 2; i <= level; i++) MinPostForNewLevel += (int)(10 * Math.Pow(1.2, i - 2));
+            return MinPostForNewLevel;
+        }
         public UserVM() { }
         public UserVM(AppUser user)
         {
