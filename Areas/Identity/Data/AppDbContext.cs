@@ -13,6 +13,7 @@ public class AppDbContext : IdentityDbContext<AppUser>
 
     public DbSet<Comment> comments { get; set; }
     public DbSet<Collection> Collections { get; set; }
+    public DbSet<Tag> Tags { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -24,5 +25,8 @@ public class AppDbContext : IdentityDbContext<AppUser>
             .WithMany(col => col.Items);
         builder.Entity<AppUser>()
             .HasMany(user => user.Collections);
+        builder.Entity<Item>()
+            .HasMany(item => item.Tags)
+            .WithMany(item => item.Items);
     }
 }

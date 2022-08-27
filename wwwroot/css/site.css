@@ -1,5 +1,18 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
+.tile {
+    width: 100%;
+    display: inline-block;
+    box-sizing: content-box;
+    background: #fff;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.title {
+    margin-top: 0px;
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }

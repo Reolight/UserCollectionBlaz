@@ -10,6 +10,6 @@ namespace UserCollectionBlaz.Areas.Identity.Data
         public string ImageSrc { get; set; }
         public Collection collection { get; set; }
         public string AdditionalFields { get; set; }
-
+        public List<Tag> Tags { get; set; }
     }
 }

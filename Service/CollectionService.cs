@@ -4,19 +4,25 @@ using UserCollectionBlaz.Areas.Identity.Data;
 using UserCollectionBlaz.ViewModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using ReturnStatementSyntax = Microsoft.CodeAnalysis.VisualBasic.Syntax.ReturnStatementSyntax;
 
 namespace UserCollectionBlaz.Service
 {
     public class CollectionService
     {
         private readonly AppDbContext _context;
+        private readonly IDbContextFactory<AppDbContext> _factory;
         private readonly UserManager<AppUser> userManager;
         private readonly CloudinaryService cloudinaryService;
-        public CollectionService(AppDbContext context, CloudinaryService cloudinaryService, UserManager<AppUser> userManager)
+        private static List<Tag> Tags;
+        public CollectionService(AppDbContext dbContext, CloudinaryService cloudinaryService, UserManager<AppUser> userManager, IDbContextFactory<AppDbContext> factory)
         {
-            _context = context;
+            _context = dbContext;
             this.cloudinaryService = cloudinaryService;
             this.userManager = userManager;
+            _factory = factory;
+            Tags = _context.Tags.ToList();
         }
 
         private static List<CollectionVM> ConvertCollectionToVM(List<Collection> collections)
@@ -39,16 +45,18 @@ namespace UserCollectionBlaz.Service
                                             select col).Include(col => col.Items).FirstOrDefaultAsync();
             if (collection is not null)
                 return new CollectionVM(collection);
-            else
-                return null;
+            return null;
         }
-        public async Task<List<CollectionVM>?> GetCollectionVMsByAutor(string name)
+        public async Task<List<CollectionVM>?> GetCollectionVMsByAutor(string name, bool isOwner = false)
         {
             List<Collection>? collections = await (from collection in _context.Collections
                                                     where collection.Owner.UserName == name
                                                     select collection)
                 .Include(col => col.Items).ToListAsync();
-            return ConvertCollectionToVM(collections);
+
+            return isOwner
+                ? ConvertCollectionToVM(collections)
+                : ConvertCollectionToVM(collections.Where(col => !col.IsPrivate).ToList());
         }
         public async Task<List<CollectionVM>?> GetAllCollectionVMsAsync()
         {
@@ -120,6 +128,7 @@ namespace UserCollectionBlaz.Service
                 Description = item.Description,
                 collection = collection,
                 ImageSrc = item.ImageSrc,
+                Tags = item.Tags,
                 AdditionalFields = CompressAdditionalFields(item.AdditionalFields)
             });
             await _context.SaveChangesAsync();
@@ -144,6 +153,7 @@ namespace UserCollectionBlaz.Service
             item.Name = itemVM.Name;
             item.Description = itemVM.Description;
             item.ImageSrc = itemVM.ImageSrc;
+            item.Tags = itemVM.Tags;
             item.AdditionalFields = CompressAdditionalFields(itemVM.AdditionalFields);
             await _context.SaveChangesAsync();
             return true;
@@ -159,5 +169,38 @@ namespace UserCollectionBlaz.Service
         private Collection? GetCollection(CollectionVM collectionVM) =>  (from col in _context.Collections
                                                                         where col.Id == collectionVM.Id
                                                                         select col).Include(col => col.Items).FirstOrDefault();
+
+        public async Task<List<string>> GetFirstSixTagNamesContainingSubstring(string? subs)
+        {
+                return (subs is not null && Tags.Any())
+                    ? (from tag in Tags
+                        where tag.Name.Contains(subs)
+                        orderby tag.Name
+                        select tag.Name).Take(6).ToList()
+                    : new List<string>();
+            
+        }
+
+        public async Task<List<string>> GetFirstSixTagNamesBeginningFrom(string? subs)
+        {
+                return (subs is not null && Tags.Any()) ?
+                    (from tag in Tags
+                        where tag.Name.StartsWith(subs)
+                        orderby tag.Name
+                        select tag.Name).Take(6).ToList()
+                    : new List<string>();
+            }
+
+        public async Task<Tag> CreateNewTag(string name)
+        {
+            Tag tag = new Tag() { Name = name };
+            Tags.Add(tag);
+            await _context.SaveChangesAsync();
+            Tags.Add(tag);
+            return tag;
+        }
+
+        public Tag? GetTagFromPool(string name) => 
+            (from tag in Tags where tag.Name == name select tag).FirstOrDefault();
     }
 }

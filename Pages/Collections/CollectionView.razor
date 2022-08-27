@@ -1,0 +1,58 @@
+﻿@page "/collection/{CollectionId:int}"
+@using UserCollectionBlaz.ViewModel
+@inject IHttpContextAccessor _httpContextAccessor
+@inject Service.CollectionService _collectionService
+
+<body>
+@if (_collectionVm is not null)
+{
+    <div class="container flex-column">
+        <h3><b>@_collectionVm.Name</b></h3>
+    </div>
+    <div>
+        <p><b>Description:</b>
+            @_collectionVm.Description
+        </p>
+    </div>
+    <div class="flex-row">
+        <p><b>Owner: </b>@_collectionVm.Owner</p>
+        @if (_collectionVm.IsPrivate)
+        {
+            <p><b>Private: </b>yes</p>
+        }
+        else
+        {
+            <p><b>Private: </b>no</p>
+        }
+        <p><b>Item count: </b>@_collectionVm.Items.Count</p>
+    </div>
+    <div class="row">
+        @foreach (ItemVM item in _collectionVm.Items)
+        {
+            <div class="col-sm-6 flex-column">
+                <h5 class="title">@item.Name</h5>
+                <img src=@item.ImageSrc alt=@item.Name/>
+                <div class="btn-group" role="group">
+                    <a href=@($"/item/{_collectionVm.Id}/{item.Id}") class="btn btn-primary">View</a>
+                    <button class="btn btn-outline-success">Laik</button>
+                </div>
+            </div>
+        }
+    </div>
+    
+    <Comments />
+}
+</body>
+
+@code {
+    [Parameter] public int CollectionId { get; set; }
+    private CollectionVM? _collectionVm;
+    private string? UserViewer;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _collectionVm = await _collectionService.GetCollectionVMAsync(CollectionId);
+        UserViewer = _httpContextAccessor.HttpContext.User.Identity.Name;
+    }
+
+}

@@ -131,7 +131,7 @@ else
 
             StyleWidth = string.Format("width: {0}%", (int)((double)(user.PostedTimes - MinPostsForCurrentLevel) / PostToNewLevel * 100));
 
-            collections = await collectionService.GetCollectionVMsByAutor(name) ?? new();
+            collections = await collectionService.GetCollectionVMsByAutor(name, _isOwner) ?? new();
         }
     }
 

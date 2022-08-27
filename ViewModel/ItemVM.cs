@@ -15,7 +15,7 @@ namespace UserCollectionBlaz.ViewModel
         public string ImageSrc { get; set; }
         public CollectionVM collection { get; set; }
         public Dictionary<string, string> AdditionalFields { get; set; }
-
+        public List<Tag> Tags { get; set; }
         public ItemVM() { }
 
         /// <summary>
@@ -29,6 +29,7 @@ namespace UserCollectionBlaz.ViewModel
             AdditionalFields = new Dictionary<string, string>();
             foreach (string fieldName in collection.AdditionalFieldsInfo.Keys)
                 AdditionalFields.Add(fieldName, "");
+            Tags = new List<Tag>();
         }
         public ItemVM(Item item, CollectionVM collectionVM)
         {
@@ -38,6 +39,7 @@ namespace UserCollectionBlaz.ViewModel
             ImageSrc = item.ImageSrc;
             collection = collectionVM;
             AdditionalFields = Service.CollectionService.UncompressAdditionalFields(item.AdditionalFields);
+            Tags = item.Tags ?? new List<Tag>();
         }
     }
 }

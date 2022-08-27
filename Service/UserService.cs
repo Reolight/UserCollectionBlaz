@@ -11,9 +11,9 @@ namespace UserCollectionBlaz.Service
         private readonly AppDbContext dbContext;
         private readonly UserManager<AppUser> userManager;
 
-        public UserService(AppDbContext appDb, UserManager<AppUser> manager)
+        public UserService(AppDbContext context, UserManager<AppUser> manager)
         {
-            dbContext = appDb;
+            dbContext = context;
             userManager = manager;
         }
 

@@ -7,36 +7,56 @@
 @inject NavigationManager navigationManager
 
 
-<div class="bg-gradient bg-opacity-25 bg-secondary container shadow flex-column">
-        <h4 class="ps-5">@collection.Name</h4>
-        <p>by @collection.Owner</p>
-        <div class="btn-group" role="group" aria-label="Basic example">
-            @if (_isOwner)
-            {
-                <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
-            }
-            <button type="button" class="btn btn-primary">View</button>
-            @if (_isOwner)
-            {
-                <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
-            }
-        </div>
-    @foreach(ItemVM item in collection.Items){
-        <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
-            <img class="card-img-top w-50" src=@item.ImageSrc alt=@item.Name />
+<div class="bg-gradient mb-3 mt-3 bg-opacity-25 bg-secondary container shadow flex-row ">
+    <div class="flex-row">
+        @if (collection.IsPrivate)
+        {
+            <h4 class="ps-5"><i>@collection.Name</i></h4>
+        }
+        else
+        {
+            <h4 class="ps-5">@collection.Name</h4>
+        }
+    <p>by @collection.Owner</p>
+    <div class="btn-group" role="group">
+        @if (_isOwner)
+        {
+            <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
+        }
+        <a type="button" class="btn btn-primary" href=@($"/collection/{collection.Id}")>View</a>
+        @if (_isOwner)
+        {
+            <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
+        }
+    </div>
+    </div>
+    @foreach (ItemVM item in collection.Items)
+    {
+        <div class="card d-sm-inline-flex flex-column mw-100 start-0 w-25">
+            <img class="card-img-top w-50" src=@item.ImageSrc alt=@item.Name/>
             <div class="card-body">
                 <h5 class="card-title">@item.Name</h5>
                 <p class="card-text">@item.Description</p>
-                @foreach (string field in item.AdditionalFields.Keys){
+                @foreach (string field in item.AdditionalFields.Keys)
+                {
                     <p class="card-text">@field - @item.AdditionalFields[field]</p>
                 }
-                @if (_isOwner){
+                
+                <div class="flex-row">
+                    @foreach (Tag tag in item.Tags)
+                    {
+                        <span class="badge bg-success ms-2 mt-1">@tag.Name</span>
+                    }
+                </div>
+                
+                @if (_isOwner)
+                {
                     <a type="button" class="btn btn-primary" href=@($"/item/edit/{collection.Id}/{item.Id}")>Edit</a>
                 }
                 <a type="button" class="btn btn-primary" href=@($"/item/{collection.Id}/{item.Id}")>View</a>
                 @if (_isOwner)
                 {
-                    <button type="button" class="btn btn-primary" 
+                    <button type="button" class="btn btn-primary"
                             @onclick="() => RemoveItem(item.Id)">Delete</button>
                 }
             </div>
@@ -45,17 +65,18 @@
     @if (_isOwner)
     {
         <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
-            <img class="card-img-top" alt="Add another item" />
+            <img class="card-img-top" alt="Add another item"/>
             <div class="card-body">
                 <button @onclick="ToCreateItem" class="btn btn-primary">Add</button>
+            </div>
         </div>
-    </div>
     }
 </div>
 
 @code {
     [Parameter] public CollectionVM collection { get; set; }
     [Parameter] public AppUser? CurrentUser { get; set; }
+    [Parameter] public bool editable { get; set; }
     private bool _isOwner;
 
     protected override void OnInitialized() => _isOwner = CurrentUser.UserName == collection.Owner;

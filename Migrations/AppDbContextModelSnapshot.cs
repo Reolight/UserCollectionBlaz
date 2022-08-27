@@ -22,6 +22,21 @@ namespace UserCollectionBlaz.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
+            modelBuilder.Entity("ItemTag", b =>
+                {
+                    b.Property<int>("ItemsId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TagsName")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("ItemsId", "TagsName");
+
+                    b.HasIndex("TagsName");
+
+                    b.ToTable("ItemTag");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -333,6 +348,31 @@ namespace UserCollectionBlaz.Migrations
                     b.HasIndex("collectionId");
 
                     b.ToTable("Item");
+                });
+
+            modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Tag", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Name");
+
+                    b.ToTable("Tags");
+                });
+
+            modelBuilder.Entity("ItemTag", b =>
+                {
+                    b.HasOne("UserCollectionBlaz.Areas.Identity.Data.Item", null)
+                        .WithMany()
+                        .HasForeignKey("ItemsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("UserCollectionBlaz.Areas.Identity.Data.Tag", null)
+                        .WithMany()
+                        .HasForeignKey("TagsName")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

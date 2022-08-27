@@ -12,9 +12,9 @@ namespace UserCollectionBlaz.Service
     {
         private readonly AppDbContext _context;
         private readonly UserManager<AppUser> _userManager;
-        public ComService(AppDbContext context, UserManager<AppUser> userManager)
+        public ComService(AppDbContext dbContext, UserManager<AppUser> userManager)
         {
-            _context = context;
+            _context = dbContext;
             _userManager = userManager;
         }
 

@@ -1,10 +1,8 @@
 ﻿@page "/item/{CollectionId:int}/new"
 @page "/item/edit/{CollectionID:int}/{ItemId:int}"
-
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Forms
 @using UserCollectionBlaz.ViewModel
 @using System.Globalization
+@using UserCollectionBlaz.Areas.Identity.Data
 @inject IHttpContextAccessor httpAccessor
 @inject UserCollectionBlaz.Service.CollectionService collectionService
 @inject NavigationManager navigationManager
@@ -45,6 +43,41 @@
                             <span asp-validation-for="Image" class="text-danger"></span>
                         </div>
 
+                        @if (_tagError.Length > 0)
+                        {
+                            <div class="alert alert-danger">
+                                <p>@_tagError</p>
+                            </div>
+                        }
+                        <div class="flex-row">
+                            <div class="dropdown input-group">
+                                @foreach (Tag tag in @EditableItem.Tags)
+                                                            {
+                                                                <div class="btn-group-sm" role="group">
+                                                                    <a class="btn btn-outline-primary">@tag.Name</a>
+                                                                    <button type="button" class="btn btn-outline-danger" @onclick="() => {EditableItem.Tags.Remove(tag); StateHasChanged(); }">x</button>
+                                                                </div>
+                                                            }
+                                                            
+                                <input type="text" class="form-control form-control-sm" @bind="_tag" @oninput="Autocompletion" placeholder="Input tags here"/>
+                                <ul class="dropdown-menu" role="menu">
+                                    @if (_Suggestions.Count == 0)
+                                    {
+                                        <li role="presentation"><a role="menuitem"><i>There is no such tag @_tag</i></a></li>
+                                    }
+                                    else
+                                    {
+                                        @foreach (string sug in _Suggestions)
+                                        {
+                                            <li role="presentation">
+                                                <button role="menuitem" @onclick="() => _tag = sug"></button>
+                                            </li>
+                                        }
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                        
                         @if (AdditionalValidationErrors.Count > 0){
                             <div class="alert alert-danger" role="alert">
                                 <ul>
@@ -104,10 +137,15 @@
     private ItemVM? EditableItem { get; set; }
     private CollectionVM CollectionStorage { get; set; }
     private IBrowserFile Image;
-
+    private string _tag;
     private List<string> AdditionalValidationErrors = new();
     private Dictionary<string, DateTime> AdditionalDateTimeFields = new();
     private Dictionary<string, bool> AdditionalBooleanFields = new();
+    private List<string> _Suggestions = new();
+    private CancellationToken _cancellationAutocompletion;
+    private string _tagError = "";
+    
+    private bool _searchTagsByStart;
     private bool _isSubmitting;
     private bool _isLoading;
     private bool _wasNull;
@@ -140,6 +178,7 @@
                         }
                     });
         _wasNull = ItemId is null;
+        _cancellationAutocompletion = new CancellationToken();
     }
 
     private async void SaveItem()
@@ -148,17 +187,14 @@
         EditableItem.AdditionalFields.Keys
             .Where(key => CollectionStorage.AdditionalFieldsInfo[key] == "date" || CollectionStorage.AdditionalFieldsInfo[key] == "bool")
             .ToList()
-            .ForEach(key => {
-                                switch (@CollectionStorage.AdditionalFieldsInfo[key])
-                                {
-                                    case "date":
-                                        EditableItem.AdditionalFields[key] = AdditionalDateTimeFields[key].ToString(CultureInfo.CurrentCulture);
-                                        break;
-                                    case "bool":
-                                        EditableItem.AdditionalFields[key] = AdditionalBooleanFields[key].ToString();
-                                        break;;
-                                }
-
+            .ForEach(key =>
+            {
+                EditableItem.AdditionalFields[key] = @CollectionStorage.AdditionalFieldsInfo[key] switch
+                {
+                    "date" => AdditionalDateTimeFields[key].ToString(CultureInfo.CurrentCulture),
+                    "bool" => AdditionalBooleanFields[key].ToString(),
+                    _ => EditableItem.AdditionalFields[key]
+                    };
             });
         if (Image is not null && Image.Size > 0){
             var imageUploadResult = await cloudinary.AddPhotoAsync(Image);
@@ -198,10 +234,44 @@
         return AdditionalValidationErrors.Count == 0;
     }
 
-    private async void Upload(InputFileChangeEventArgs e)
+    private void Upload(InputFileChangeEventArgs e)
     {
         _isLoading = true;
         Image = e.File;
         _isLoading = false;
+    }
+
+    private bool ValidateTagInput(string val)
+    {
+        _tagError = "";
+        if (val.Length < 4)
+            _tagError += "Length is too small. ";
+        if (val.IndexOfAny("!@#$%^&*()+/.,|\\\"';:{[]}`~№? 0123456789".ToCharArray()) != -1)
+            _tagError += "Tag input contains prohibited symbols. Use symbols only. ";
+        return string.IsNullOrEmpty(_tagError);
+    }
+
+    private async Task AddTag(string putted)
+    {
+        Tag toAdd = collectionService.GetTagFromPool(putted) ?? await collectionService.CreateNewTag(putted);
+        EditableItem.Tags.Add(toAdd);
+        _tag = "";
+    }
+
+    private async Task MakeSuggestions(string putted)
+        => _Suggestions = _searchTagsByStart ?
+            await collectionService.GetFirstSixTagNamesBeginningFrom(putted)
+            : await collectionService.GetFirstSixTagNamesContainingSubstring(putted);
+    
+    private async Task Autocompletion(ChangeEventArgs args)
+    {
+        string putted = args.Value.ToString();
+        if (!string.IsNullOrWhiteSpace(putted) && ValidateTagInput(putted.TrimEnd()))
+        {
+            if (putted[^1] == ' ')
+                await AddTag(putted.TrimEnd());
+            else
+                await MakeSuggestions(putted);
+        }
     }
 }

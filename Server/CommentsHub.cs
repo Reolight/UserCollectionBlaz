@@ -20,7 +20,7 @@ namespace UserCollectionBlaz.Server
 
         public async Task PostCom(ComVM comment)
         {
-            Comment com = new Comment()
+            Comment com = new Comment
             {
                 Content = comment.Content,
                 Autor = await _userManager.FindByNameAsync(comment.AutorId),
@@ -29,7 +29,7 @@ namespace UserCollectionBlaz.Server
             };
 
             _comService.Add(com);
-            await Clients.All.SendAsync("RecieveCom", com);
+            await Clients.All.SendAsync("ReceiveCom", com);
         }
     }
 }

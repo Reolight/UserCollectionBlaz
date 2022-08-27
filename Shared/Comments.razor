@@ -90,7 +90,7 @@
         hubConnection = new HubConnectionBuilder()
             .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
             .Build();
-        hubConnection.On<Comment>("RecieveCom", (comment) =>{
+        hubConnection.On<Comment>("ReceiveCom", ( Comment comment) =>{
                                                                 PostedComments.Add(comment);
                                                                 InvokeAsync(StateHasChanged);
         });
