@@ -36,6 +36,12 @@
                 }
             </div>
         }
+        <div class="flex-row-reverse d-sm-inline">
+            @foreach (string name in itemVm.Tags.Select(tag => tag.Name).ToList())
+            {
+                <span class="badge bg-primary ms-2 mt-1">@name</span>
+            }
+        </div>
     </div>
 
     <Comments/>

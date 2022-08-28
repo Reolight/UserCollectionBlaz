@@ -1,14 +1,16 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using UserCollectionBlaz.Areas.Identity.Data
 @using UserCollectionBlaz.ViewModel
+@using Microsoft.JSInterop
 @inject UserManager<AppUser> userManager
 @inject IHttpContextAccessor httpAccessor
 @inject Service.CollectionService collectionService
 @inject NavigationManager navigationManager
-
+@inject IJSRuntime JsRuntime
 
 <div class="bg-gradient mb-3 mt-3 bg-opacity-25 bg-secondary container shadow flex-row ">
     <div class="flex-row">
+        <p>@(_dimension.Width)</p>
         @if (collection.IsPrivate)
         {
             <h4 class="ps-5"><i>@collection.Name</i></h4>
@@ -17,23 +19,23 @@
         {
             <h4 class="ps-5">@collection.Name</h4>
         }
-    <p>by @collection.Owner</p>
-    <div class="btn-group" role="group">
-        @if (_isOwner)
-        {
-            <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
-        }
-        <a type="button" class="btn btn-primary" href=@($"/collection/{collection.Id}")>View</a>
-        @if (_isOwner)
-        {
-            <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
-        }
-    </div>
+        <p>by @collection.Owner</p>
+        <div class="btn-group" role="group">
+            @if (_isOwner)
+            {
+                <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
+            }
+            <a type="button" class="btn btn-primary" href=@($"/collection/{collection.Id}")>View</a>
+            @if (_isOwner)
+            {
+                <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
+            }
+        </div>
     </div>
     @foreach (ItemVM item in collection.Items)
     {
-        <div class="card d-sm-inline-flex flex-column mw-100 start-0 w-25">
-            <img class="card-img-top w-50" src=@item.ImageSrc alt=@item.Name/>
+        <div class="card container-sm d-sm-inline-flex flex-column mw-100" style=@($"width: {_dimension.Width}px")>
+            <img class="card-img-top" src=@item.ImageSrc alt=@item.Name/>
             <div class="card-body">
                 <h5 class="card-title">@item.Name</h5>
                 <p class="card-text">@item.Description</p>
@@ -78,8 +80,27 @@
     [Parameter] public AppUser? CurrentUser { get; set; }
     [Parameter] public bool editable { get; set; }
     private bool _isOwner;
+    private BrowserDimension _dimension = new();
 
-    protected override void OnInitialized() => _isOwner = CurrentUser.UserName == collection.Owner;
+    public class BrowserDimension
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isOwner = CurrentUser.UserName == collection.Owner;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _dimension = await JsRuntime.InvokeAsync<BrowserDimension>("getDimensions");
+        _dimension.Width = (int)(_dimension.Height * 0.9 / 4);
+        if (_dimension.Width / 4 < 300) _dimension.Width = 300;
+        StateHasChanged();
+        await base.OnAfterRenderAsync(firstRender);
+    }
 
     private async void RemoveCollection() 
     { 
@@ -95,4 +116,14 @@
         collectionService.RemoveItemFromCollectionAsync(
             collection,
             collection.Items.Find(itma => itma.Id == id));
+    
+    public class BrowserService
+    {
+        private readonly IJSRuntime _js;
+
+        public BrowserService(IJSRuntime js)
+        {
+            _js = js;
+        }
+    }
 }

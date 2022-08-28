@@ -3,9 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using UserCollectionBlaz.Areas.Identity.Data;
 using UserCollectionBlaz.ViewModel;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using ReturnStatementSyntax = Microsoft.CodeAnalysis.VisualBasic.Syntax.ReturnStatementSyntax;
 
 namespace UserCollectionBlaz.Service
 {
@@ -42,7 +39,9 @@ namespace UserCollectionBlaz.Service
         {
             Collection? collection = await (from col in _context.Collections
                                             where col.Id == Id
-                                            select col).Include(col => col.Items).FirstOrDefaultAsync();
+                                            select col)
+                .Include(col => col.Items).ThenInclude(item => item.Tags)
+                .FirstOrDefaultAsync();
             if (collection is not null)
                 return new CollectionVM(collection);
             return null;
@@ -52,7 +51,7 @@ namespace UserCollectionBlaz.Service
             List<Collection>? collections = await (from collection in _context.Collections
                                                     where collection.Owner.UserName == name
                                                     select collection)
-                .Include(col => col.Items).ToListAsync();
+                .Include(col => col.Items).ThenInclude(item => item.Tags).ToListAsync();
 
             return isOwner
                 ? ConvertCollectionToVM(collections)
@@ -62,7 +61,8 @@ namespace UserCollectionBlaz.Service
         {
             return await new Task<List<CollectionVM>>(() =>
             {
-                List<Collection> collections = _context.Collections.Include(col => col.Items).ToList();
+                List<Collection> collections = _context.Collections.Include(col => col.Items)
+                    .ThenInclude(item => item.Tags).ToList();
                 return ConvertCollectionToVM(collections);
             });
         }
@@ -168,7 +168,8 @@ namespace UserCollectionBlaz.Service
         }
         private Collection? GetCollection(CollectionVM collectionVM) =>  (from col in _context.Collections
                                                                         where col.Id == collectionVM.Id
-                                                                        select col).Include(col => col.Items).FirstOrDefault();
+                                                                        select col).Include(col => col.Items)
+            .ThenInclude(item => item.Tags).FirstOrDefault();
 
         public async Task<List<string>> GetFirstSixTagNamesContainingSubstring(string? subs)
         {
@@ -196,7 +197,6 @@ namespace UserCollectionBlaz.Service
             Tag tag = new Tag() { Name = name };
             Tags.Add(tag);
             await _context.SaveChangesAsync();
-            Tags.Add(tag);
             return tag;
         }
 

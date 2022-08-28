@@ -248,6 +248,8 @@
             _tagError += "Length is too small. ";
         if (val.IndexOfAny("!@#$%^&*()+/.,|\\\"';:{[]}`~№? 0123456789".ToCharArray()) != -1)
             _tagError += "Tag input contains prohibited symbols. Use symbols only. ";
+        if (EditableItem.Tags.Select(tag => tag.Name).ToList().Contains(val.TrimEnd()))
+            _tagError += "This tag is already added";
         return string.IsNullOrEmpty(_tagError);
     }
 
