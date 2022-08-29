@@ -8,7 +8,7 @@ namespace UserCollectionBlaz.Service
     /// <summary>
     /// Service for maintain commentaries: saving and 
     /// </summary>
-    public class ComService : IService<Comment, int>
+    public class ComService
     {
         private readonly AppDbContext _context;
         private readonly UserManager<AppUser> _userManager;
@@ -28,23 +28,23 @@ namespace UserCollectionBlaz.Service
                 PostedTime = comVM.Posted
             });
         }
-        public void Add(Comment item)
+        public async Task Add(Comment item)
         {
-            _context.comments.Add(item);
-            _context.SaveChanges();
+            _context.Comments.Add(item);
+            await _context.SaveChangesAsync();
         }
 
         public Comment? Get(int id)
         {
-            return (from a in _context.comments
+            return (from a in _context.Comments
                     where a.Id == id 
                     orderby a.PostedTime descending 
-                    select a).First();
+                    select a).Include(com => com.Autor).First();
         }
 
         public IEnumerable<Comment>? GetAll()
         {
-            return _context.comments.ToList();
+            return _context.Comments.Include(com => com.Autor).ToList();
         }
 
 
@@ -55,25 +55,16 @@ namespace UserCollectionBlaz.Service
         /// <returns></returns>
         public IEnumerable<Comment>? GetAllByKey(string key)
         {
-            return _context.comments
+            return _context.Comments
                 .Where(com => com.PlaceUrl == key)
                 .Include(com => com.Autor)
                 .Select(com => com);
         }
 
-        public void Remove(Comment item)
+        public async Task Remove(Comment item)
         {
-            _context.comments.Remove(item);
-            _context.SaveChanges();
-        }
-
-        /// <summary>
-        /// Doesn't works for comments for now
-        /// </summary>
-        /// <returns>NotImplementedException</returns>
-        public void Set(int key, Comment value)
-        {
-            throw new NotImplementedException("It doesn't implemented for Comments yet");
+            _context.Comments.Remove(item);
+            await _context.SaveChangesAsync();
         }
     }
 }

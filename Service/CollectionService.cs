@@ -42,16 +42,15 @@ namespace UserCollectionBlaz.Service
                                             select col)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
                 .FirstOrDefaultAsync();
-            if (collection is not null)
-                return new CollectionVM(collection);
-            return null;
+            return collection is not null ? new CollectionVM(collection) : null;
         }
         public async Task<List<CollectionVM>?> GetCollectionVMsByAutor(string name, bool isOwner = false)
         {
             List<Collection>? collections = await (from collection in _context.Collections
                                                     where collection.Owner.UserName == name
                                                     select collection)
-                .Include(col => col.Items).ThenInclude(item => item.Tags).ToListAsync();
+                .Include(col => col.Items).ThenInclude(item => item.Tags)
+                .ToListAsync();
 
             return isOwner
                 ? ConvertCollectionToVM(collections)
@@ -59,13 +58,10 @@ namespace UserCollectionBlaz.Service
         }
         public async Task<List<CollectionVM>?> GetAllCollectionVMsAsync()
         {
-            return await new Task<List<CollectionVM>>(() =>
-            {
-                List<Collection> collections = _context.Collections.Include(col => col.Items)
-                    .ThenInclude(item => item.Tags).ToList();
+            List<Collection> collections = await _context.Collections.Include(col => col.Items)
+                    .ThenInclude(item => item.Tags).ToListAsync();
                 return ConvertCollectionToVM(collections);
-            });
-        }
+            }
         public async Task<bool> AddCollectionAsync(CollectionVM collectionVM)
         {
             Collection collection = new()
@@ -80,13 +76,13 @@ namespace UserCollectionBlaz.Service
             };
 
             _context.Collections.Add(collection);
-            int info = _context.SaveChanges();
+            int info = await _context.SaveChangesAsync();
             Console.WriteLine(info);
             return true;
         }
-        public async Task<bool> RemoveCollectionAsync(CollectionVM collectionVM)
+        public async Task<bool> RemoveCollectionAsync(CollectionVM collectionVm)
         {
-            Collection? collection = GetCollection(collectionVM);
+            Collection? collection = GetCollection(collectionVm);
             if (collection is null) return false;
             foreach (Item item in collection.Items)
             {
@@ -98,23 +94,23 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> TogglePrivateMode(CollectionVM collectionVM)
+        public async Task<bool> TogglePrivateMode(CollectionVM collectionVm)
         {
-            Collection? collection = GetCollection(collectionVM);
+            Collection? collection = GetCollection(collectionVm);
             if (collection is null) return false;
             collection.IsPrivate = !collection.IsPrivate;
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> EditCollectionAsync(CollectionVM collectionVM)
+        public async Task<bool> EditCollectionAsync(CollectionVM collectionVm)
         {
-            Collection? collection = GetCollection(collectionVM);
+            Collection? collection = GetCollection(collectionVm);
             if (collection == null) return false;
-            collection.Name = collectionVM.Name;
-            collection.Description = collectionVM.Description;
-            collection.ItemType = collectionVM.ItemType;
-            collection.IsPrivate = collectionVM.IsPrivate;
-            collection.AdditionalFieldsInfo = CompressAdditionalFields(collectionVM.AdditionalFieldsInfo);
+            collection.Name = collectionVm.Name;
+            collection.Description = collectionVm.Description;
+            collection.ItemType = collectionVm.ItemType;
+            collection.IsPrivate = collectionVm.IsPrivate;
+            collection.AdditionalFieldsInfo = CompressAdditionalFields(collectionVm.AdditionalFieldsInfo);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -134,27 +130,28 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> RemoveItemFromCollectionAsync(CollectionVM? collectionVM, ItemVM? delItem)
+        public async Task<bool> RemoveItemFromCollectionAsync(CollectionVM? collectionVm, ItemVM? delItem)
         {
-            Collection? collection = GetCollection(collectionVM);
+            Collection? collection = GetCollection(collectionVm);
             if (collection is null || delItem is null) return false;
             Item? item = collection.Items.Find(itma => itma.Id == delItem.Id);
-            await cloudinaryService.DeletePhotoAsync(item.ImageSrc);
+            if (string.IsNullOrEmpty(item.ImageSrc))
+                await cloudinaryService.DeletePhotoAsync(item.ImageSrc);
             collection.Items.Remove(item);
             await _context.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> EditItemAsync(ItemVM itemVM)
+        public async Task<bool> EditItemAsync(ItemVM itemVm)
         {
-            Collection? collection = GetCollection(itemVM.collection);
+            Collection? collection = GetCollection(itemVm.collection);
             if (collection is null) return false;
-            Item? item = collection.Items.Find(col => col.Id == itemVM.Id);
+            Item? item = collection.Items.Find(col => col.Id == itemVm.Id);
             if (item is null) return false;
-            item.Name = itemVM.Name;
-            item.Description = itemVM.Description;
-            item.ImageSrc = itemVM.ImageSrc;
-            item.Tags = itemVM.Tags;
-            item.AdditionalFields = CompressAdditionalFields(itemVM.AdditionalFields);
+            item.Name = itemVm.Name;
+            item.Description = itemVm.Description;
+            item.ImageSrc = itemVm.ImageSrc;
+            item.Tags = itemVm.Tags;
+            item.AdditionalFields = CompressAdditionalFields(itemVm.AdditionalFields);
             await _context.SaveChangesAsync();
             return true;
         }

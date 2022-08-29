@@ -1,0 +1,47 @@
+﻿@using UserCollectionBlaz.Service
+@using UserCollectionBlaz.Areas.Identity.Data
+@using UserCollectionBlaz.ViewModel
+@inject IHttpContextAccessor _httpContextAccessor
+@inject NavigationManager _navigationManager
+@inject LikeService _likeService
+
+<button class="btn d-inline-block flex-row btn-outline-success" disabled=@(!_isAuthentificated) @onclick="Liked">
+    <p>@_count</p>
+    <img src="items/hrt.png" width="16" height="16" alt="L"/>
+    @if (!_isAuthentificated)
+    {
+        <p>Likes</p>
+    }
+    else if (_userName is not null && _like.LikedBy.Contains(_userName))
+    {
+        <p>Liked</p>
+    }
+    else
+    {
+        <p>Like</p>
+    }
+</button>
+
+@code {
+        //here must be item type
+    [Parameter] public string Location { get; set; }
+    private int _count;
+    private LikeVM _like;
+    private bool _isAuthentificated;
+    private string? _userName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _like = await _likeService.GetByLocation(Location);
+        _count = _like.LikedBy.Count;
+        _isAuthentificated = _httpContextAccessor.HttpContext.User.Identity.IsAuthenticated;
+        _userName = _httpContextAccessor.HttpContext.User.Identity.Name;
+    }
+
+    private async Task Liked()
+    {
+        if (_userName is null) return;
+        _like = await _likeService.Update(_like, _userName);
+        _count = _like.LikedBy.Count;
+    }
+}

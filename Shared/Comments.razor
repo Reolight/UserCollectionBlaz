@@ -7,6 +7,7 @@
 @inject UserCollectionBlaz.Service.UserService userService
 @inject NavigationManager navigationManager
 @inject UserManager<AppUser> userManager
+@inject Service.LikeService _likeService
 @implements IAsyncDisposable
 
 
@@ -62,10 +63,6 @@
                             Posted <cite title="Source Title">@comment.PostedTime</cite>
                         </figcaption>
                     </figure>
-                    <div class="d-inline-flex flex-row">
-                        <p class="align-middle">0</p>
-                        <button type="button" class="btn btn-light">Like</button>
-                    </div>
                 </div>
             </div>
         }
@@ -78,14 +75,15 @@
     private string? UrlKey;
     private string? CurrentContent;
     private HubConnection? hubConnection;
-    private List<Comment>? PostedComments = new List<Comment>();
+    private List<Comment>? PostedComments = new();
+    private List<LikeVM>? Likes = new();
     private bool isPosting;
     private bool isHubConnected => hubConnection?.State == HubConnectionState.Connected;
 
     protected override async Task OnInitializedAsync()
     {
         UrlKey = navigationManager.Uri.Replace(navigationManager.BaseUri, "");
-        PostedComments = commentsService.GetAllByKey(UrlKey)?.OrderByDescending(com => com.PostedTime).ToList() ?? new();
+        PostedComments = commentsService.GetAllByKey(UrlKey)?.OrderByDescending(com => com.PostedTime).ToList() ?? new List<Comment>();
         User = await userService.GetVM(httpAccessor.HttpContext.User.Identity.Name);
         hubConnection = new HubConnectionBuilder()
             .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))

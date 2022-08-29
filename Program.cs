@@ -26,6 +26,7 @@ builder.Services.AddScoped<ComService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<CollectionService>();
+builder.Services.AddTransient<LikeService>();
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.AddHttpClient();
 builder.Services.AddResponseCompression(opts =>

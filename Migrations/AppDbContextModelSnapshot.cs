@@ -182,6 +182,9 @@ namespace UserCollectionBlaz.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("AppUser")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("AvatarSrc")
                         .HasColumnType("nvarchar(max)");
 
@@ -248,6 +251,8 @@ namespace UserCollectionBlaz.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AppUser");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -317,7 +322,7 @@ namespace UserCollectionBlaz.Migrations
 
                     b.HasIndex("AutorId");
 
-                    b.ToTable("comments");
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Item", b =>
@@ -348,6 +353,16 @@ namespace UserCollectionBlaz.Migrations
                     b.HasIndex("collectionId");
 
                     b.ToTable("Item");
+                });
+
+            modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Like", b =>
+                {
+                    b.Property<string>("Position")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Position");
+
+                    b.ToTable("Likes");
                 });
 
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Tag", b =>
@@ -426,6 +441,13 @@ namespace UserCollectionBlaz.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.AppUser", b =>
+                {
+                    b.HasOne("UserCollectionBlaz.Areas.Identity.Data.Like", null)
+                        .WithMany("LikedBy")
+                        .HasForeignKey("AppUser");
+                });
+
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Collection", b =>
                 {
                     b.HasOne("UserCollectionBlaz.Areas.Identity.Data.AppUser", "Owner")
@@ -463,6 +485,11 @@ namespace UserCollectionBlaz.Migrations
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Collection", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Like", b =>
+                {
+                    b.Navigation("LikedBy");
                 });
 #pragma warning restore 612, 618
         }

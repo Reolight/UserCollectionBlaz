@@ -61,6 +61,8 @@
                     <button type="button" class="btn btn-primary"
                             @onclick="() => RemoveItem(item.Id)">Delete</button>
                 }
+                <br/>
+                <LikeComponent Location=@($"item-{item.Id}") />
             </div>
         </div>
     }

@@ -16,6 +16,7 @@ namespace UserCollectionBlaz.ViewModel
         public CollectionVM collection { get; set; }
         public Dictionary<string, string> AdditionalFields { get; set; }
         public List<Tag> Tags { get; set; }
+        public LikeVM LikeVm { get; set; }
         public ItemVM() { }
 
         /// <summary>
@@ -30,6 +31,7 @@ namespace UserCollectionBlaz.ViewModel
             foreach (string fieldName in collection.AdditionalFieldsInfo.Keys)
                 AdditionalFields.Add(fieldName, "");
             Tags = new List<Tag>();
+            LikeVm = new LikeVM();
         }
         public ItemVM(Item item, CollectionVM collectionVM)
         {
