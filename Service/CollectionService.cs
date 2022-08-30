@@ -42,12 +42,14 @@ namespace UserCollectionBlaz.Service
             => await _context.Collections
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
                 .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .Include(collection => collection.Owner)
                 .ToListAsync();
         
         private async Task<List<Collection>> GetAllPublicCollections()
             => await _context.Collections.Where(collection => !collection.IsPrivate)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
                 .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .Include(collection => collection.Owner)
                 .ToListAsync();
         
         public async Task<CollectionVM?> GetCollectionVMAsync(int? Id)
@@ -57,6 +59,7 @@ namespace UserCollectionBlaz.Service
                                             select col)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
                 .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .Include(collection => collection.Owner)
                 .FirstOrDefaultAsync();
             return collection is not null ? new CollectionVM(collection) : null;
         }
@@ -67,6 +70,7 @@ namespace UserCollectionBlaz.Service
                                                     select collection)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
                 .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .Include(collection => collection.Owner)
                 .ToListAsync();
 
             return isOwner
@@ -77,7 +81,8 @@ namespace UserCollectionBlaz.Service
         {
             List<Collection> collections = await _context.Collections
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
-                .Include(col => col.Items).ThenInclude(item => item.Likes).ToListAsync();
+                .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .Include(collection => collection.Owner).ToListAsync();
                 return ConvertCollectionToVM(collections);
             }
         public async Task<bool> AddCollectionAsync(CollectionVM collectionVM)
