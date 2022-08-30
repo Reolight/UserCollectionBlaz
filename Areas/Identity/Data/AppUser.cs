@@ -1,11 +1,6 @@
 ﻿#nullable disable
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
-using UserCollectionBlaz.ViewModel;
 
 namespace UserCollectionBlaz.Areas.Identity.Data;
 
@@ -20,5 +15,5 @@ public class AppUser : IdentityUser
     public int Level { get; set; } = 1;
     public ICollection<Comment> Comments { get; set; }
     public List<Collection> Collections { get; set; }
-     
+    public List<Like> Liked { get; set; }
 }

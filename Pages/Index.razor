@@ -1,9 +1,53 @@
 ﻿@page "/"
-
+@using UserCollectionBlaz.Areas.Identity.Data
+@using UserCollectionBlaz.Pages.Collections
+@using UserCollectionBlaz.ViewModel
+@inject Service.CollectionService _collectionService
 <PageTitle>Index</PageTitle>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+<div class="container">
+    <div class="row">
+        <div class="col">
+            @if (_tagsPool.Count > 0)
+            {
+                @foreach (Tag tag in _tagsPool)
+                {
+                    <p>@(tag.Name): @(tag.Items.Count)</p>
+                }
+            }
+        </div>
+        
+        <div class="col-6">
+            @if (PopularColl.Count > 0)
+            {
+                @foreach (CollectionVM collectionVm in PopularColl)
+                {
+                    <Collection collection="collectionVm"/>    
+                }
+            }
+            <SurveyPrompt Title="How is Blazor working for you?"/>
+        </div>
+        
+        <div class="col">
+            <p>there is smth too</p>
+        </div>
+    </div>
+</div>
+
+
 
 <a href="/another">
     Link to another page
 </a>
+
+@code{
+    private List<Tag> _tagsPool = new List<Tag>();
+    private List<CollectionVM> PopularColl = new List<CollectionVM>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _tagsPool = await _collectionService.GetAllTags();
+        PopularColl = await _collectionService.GetMostLikedCollections(5);
+    }
+
+}

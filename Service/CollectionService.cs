@@ -13,13 +13,15 @@ namespace UserCollectionBlaz.Service
         private readonly UserManager<AppUser> userManager;
         private readonly CloudinaryService cloudinaryService;
         private static List<Tag> Tags;
-        public CollectionService(AppDbContext dbContext, CloudinaryService cloudinaryService, UserManager<AppUser> userManager, IDbContextFactory<AppDbContext> factory)
+        private readonly LikeService _likeService;
+        public CollectionService(AppDbContext dbContext, CloudinaryService cloudinaryService, UserManager<AppUser> userManager, IDbContextFactory<AppDbContext> factory, LikeService likeService)
         {
             _context = dbContext;
             this.cloudinaryService = cloudinaryService;
             this.userManager = userManager;
             _factory = factory;
-            Tags = _context.Tags.ToList();
+            _likeService = likeService;
+            Tags = _context.Tags.Include(tag => tag.Items).ToList();
         }
 
         private static List<CollectionVM> ConvertCollectionToVM(List<Collection> collections)
@@ -35,12 +37,26 @@ namespace UserCollectionBlaz.Service
 
             return collectionVMs;
         }
+
+        private async Task<List<Collection>> GetAllCollections()
+            => await _context.Collections
+                .Include(col => col.Items).ThenInclude(item => item.Tags)
+                .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .ToListAsync();
+        
+        private async Task<List<Collection>> GetAllPublicCollections()
+            => await _context.Collections.Where(collection => !collection.IsPrivate)
+                .Include(col => col.Items).ThenInclude(item => item.Tags)
+                .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .ToListAsync();
+        
         public async Task<CollectionVM?> GetCollectionVMAsync(int? Id)
         {
             Collection? collection = await (from col in _context.Collections
                                             where col.Id == Id
                                             select col)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
+                .Include(col => col.Items).ThenInclude(item => item.Likes)
                 .FirstOrDefaultAsync();
             return collection is not null ? new CollectionVM(collection) : null;
         }
@@ -50,6 +66,7 @@ namespace UserCollectionBlaz.Service
                                                     where collection.Owner.UserName == name
                                                     select collection)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
+                .Include(col => col.Items).ThenInclude(item => item.Likes)
                 .ToListAsync();
 
             return isOwner
@@ -58,8 +75,9 @@ namespace UserCollectionBlaz.Service
         }
         public async Task<List<CollectionVM>?> GetAllCollectionVMsAsync()
         {
-            List<Collection> collections = await _context.Collections.Include(col => col.Items)
-                    .ThenInclude(item => item.Tags).ToListAsync();
+            List<Collection> collections = await _context.Collections
+                .Include(col => col.Items).ThenInclude(item => item.Tags)
+                .Include(col => col.Items).ThenInclude(item => item.Likes).ToListAsync();
                 return ConvertCollectionToVM(collections);
             }
         public async Task<bool> AddCollectionAsync(CollectionVM collectionVM)
@@ -114,6 +132,7 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
+        
         public async Task<bool> AddItemToCollectionAsync(ItemVM item)
         {
             Collection? collection = GetCollection(item.collection);
@@ -130,6 +149,7 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
+        
         public async Task<bool> RemoveItemFromCollectionAsync(CollectionVM? collectionVm, ItemVM? delItem)
         {
             Collection? collection = GetCollection(collectionVm);
@@ -172,7 +192,7 @@ namespace UserCollectionBlaz.Service
         {
                 return (subs is not null && Tags.Any())
                     ? (from tag in Tags
-                        where tag.Name.Contains(subs)
+                        where tag.Name.ToLower().Contains(subs.ToLower())
                         orderby tag.Name
                         select tag.Name).Take(6).ToList()
                     : new List<string>();
@@ -183,11 +203,17 @@ namespace UserCollectionBlaz.Service
         {
                 return (subs is not null && Tags.Any()) ?
                     (from tag in Tags
-                        where tag.Name.StartsWith(subs)
+                        where tag.Name.ToLower().StartsWith(subs.ToLower())
                         orderby tag.Name
                         select tag.Name).Take(6).ToList()
                     : new List<string>();
             }
+        
+        public async Task<List<CollectionVM>> GetMostLikedCollections(int count, int page = 0)
+        {
+            List<CollectionVM> CollectionsVm = ConvertCollectionToVM(await GetAllPublicCollections());
+            return CollectionsVm.OrderByDescending(vm => vm.Likes).Skip(count * page).Take(count).ToList();
+        }
 
         public async Task<Tag> CreateNewTag(string name)
         {
@@ -198,6 +224,9 @@ namespace UserCollectionBlaz.Service
         }
 
         public Tag? GetTagFromPool(string name) => 
-            (from tag in Tags where tag.Name == name select tag).FirstOrDefault();
+            (from tag in Tags where String.Equals(tag.Name, name, StringComparison.CurrentCultureIgnoreCase) select tag).FirstOrDefault();
+
+        public async Task<List<Tag>> GetAllTags()
+            => Tags;
     }
 }

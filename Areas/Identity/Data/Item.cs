@@ -11,5 +11,6 @@ namespace UserCollectionBlaz.Areas.Identity.Data
         public Collection collection { get; set; }
         public string AdditionalFields { get; set; }
         public List<Tag> Tags { get; set; }
+        public Like Likes { get; set; }
     }
 }

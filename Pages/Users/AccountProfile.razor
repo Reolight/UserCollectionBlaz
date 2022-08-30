@@ -37,9 +37,11 @@ else
         </div>
 
         <div class="progress">
-          <div class="progress-bar" role="progressbar" style=@StyleWidth aria-valuenow=@user.PostedTimes aria-valuemin=@MinPostsForCurrentLevel aria-valuemax=@PostToNewLevel></div>
+            <div class="progress-bar" role="progressbar" style=@StyleWidth 
+                 aria-valuenow=@user.PostedTimes aria-valuemin=@UserVM.GetMinPostForThisLevel(user.Level)
+                 aria-valuemax=@UserVM.GetMaxPostForNewLevel(user.Level)></div>
         </div>
-        <p>@(user.PostedTimes - MinPostsForCurrentLevel)/@PostToNewLevel</p>
+        <p>@(user.PostedTimes - UserVM.GetMinPostForThisLevel(user.Level))/@UserVM.GetMaxPostForNewLevel(user.Level)</p>
     </div>
 
     @if (_isEditState){
@@ -101,8 +103,6 @@ else
     private AppUser? user;
     private bool _isOwner;
     private string? UrlImg;
-    private int PostToNewLevel;
-    private int MinPostsForCurrentLevel;
     private string? StyleWidth;
     private string? LoggedUserName;
     private UserVM? EditUserData;
@@ -124,12 +124,9 @@ else
             _isOwner = LoggedUserName is null? false : LoggedUserName.ToLower().Equals(user.UserName.ToLower());
 
             int i;
-            for (i = 2; i <= user.Level; i++) 
-                PostToNewLevel += (int)(10 * Math.Pow(1.2, i));
-            for (i = 2; i < user.Level; i++)
-                MinPostsForCurrentLevel += (int)(10 * Math.Pow(1.2, i));
 
-            StyleWidth = string.Format("width: {0}%", (int)((double)(user.PostedTimes - MinPostsForCurrentLevel) / PostToNewLevel * 100));
+            StyleWidth =
+                $"width: {(int)((double)(user.PostedTimes - UserVM.GetMinPostForThisLevel(user.Level)) / UserVM.GetMaxPostForNewLevel(user.Level) * 100)}%";
 
             collections = await collectionService.GetCollectionVMsByAutor(name, _isOwner) ?? new();
         }

@@ -5,21 +5,25 @@
 @inject NavigationManager _navigationManager
 @inject LikeService _likeService
 
-<button class="btn d-inline-block flex-row btn-outline-success" disabled=@(!_isAuthentificated) @onclick="Liked">
-    <p>@_count</p>
-    <img src="items/hrt.png" width="16" height="16" alt="L"/>
-    @if (!_isAuthentificated)
-    {
-        <p>Likes</p>
-    }
-    else if (_userName is not null && _like.LikedBy.Contains(_userName))
-    {
-        <p>Liked</p>
-    }
-    else
-    {
-        <p>Like</p>
-    }
+<button class="btn btn-outline-success" disabled=@(!_isAuthentificated) @onclick="Liked">
+    <div class="d-inline-flex flex-row">
+        <p>@_count</p>
+
+        @if (!_isAuthentificated)
+        {
+            <img src="items/hrt-sol.png" width="16" height="16" alt="L"/>
+        }
+        else if (_userName is not null && _like.LikedBy.Contains(_userName))
+        {
+            <img src="items/hrt-sol.png" width="16" height="16" alt="L"/>
+            <p>Liked</p>
+        }
+        else
+        {
+            <img src="items/hrt.png" width="16" height="16" alt="L"/>
+            <p>Like</p>
+        }
+    </div>
 </button>
 
 @code {

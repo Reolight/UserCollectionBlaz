@@ -220,7 +220,7 @@
             {
                 case "string":
                 case "text":            
-                    if (!string.IsNullOrWhiteSpace(EditableItem.AdditionalFields[key]))
+                    if (string.IsNullOrWhiteSpace(EditableItem.AdditionalFields[key]))
                         AdditionalValidationErrors.Add($"Field {key} must contain a value");
                    break;
                 case "int":

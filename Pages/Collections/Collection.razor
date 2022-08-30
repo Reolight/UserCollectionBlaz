@@ -9,32 +9,46 @@
 @inject IJSRuntime JsRuntime
 
 <div class="bg-gradient mb-3 mt-3 bg-opacity-25 bg-secondary container shadow flex-row ">
-    <div class="flex-row">
-        <p>@(_dimension.Width)</p>
-        @if (collection.IsPrivate)
-        {
-            <h4 class="ps-5"><i>@collection.Name</i></h4>
-        }
-        else
-        {
-            <h4 class="ps-5">@collection.Name</h4>
-        }
-        <p>by @collection.Owner</p>
-        <div class="btn-group" role="group">
-            @if (_isOwner)
-            {
-                <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
-            }
-            <a type="button" class="btn btn-primary" href=@($"/collection/{collection.Id}")>View</a>
-            @if (_isOwner)
-            {
-                <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
-            }
+    <div class="d-inline-flex flex-row">
+        <div class="col">
+            <span class="align-bottom">
+                <a href=@($"/collection/{collection.Id}")>
+                @if (collection.IsPrivate)
+                {
+                    <h4 class="ps-5"><i>@collection.Name</i></h4>
+                }
+                else
+                {
+                    <h4 class="d-inline-block flex-row ps-1">@collection.Name</h4>
+                }
+                </a>
+            </span>
         </div>
+        <div class="col-6">
+            <cite class="ps-1">by @collection.Owner</cite>
+            <img class="ps-1" src="items/hrt-sol.png" width="16" height="16"/>@collection.Likes
+            <a class="ps-1" role="button" data-bs-toggle="collapse" href=@($"#collapse{collection.Id}") aria-expanded="False" aria-controls="@($"collapse{collection.Id}")">Collapse</a>
+        </div>
+        <div class="col">
+            <div class="btn-group flex-row-reverse" role="group">
+                @if (_isOwner)
+                {
+                    <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
+                }
+                <a type="button" class="btn btn-primary" href=@($"/collection/{collection.Id}")>View</a>
+                @if (_isOwner)
+                {
+                    <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
+                }
+            </div>
+            </div>
+        
     </div>
+    <div class="collapse" id="@($"collapse{collection.Id}")">
     @foreach (ItemVM item in collection.Items)
     {
-        <div class="card container-sm d-sm-inline-flex flex-column mw-100" style=@($"width: {_dimension.Width}px")>
+        <div class="card container-sm d-sm-inline-flex flex-column mw-100" style=@($"width: {_dimension.Width}px")
+             @onclick="() => ToViewItem(item.Id)" >
             <img class="card-img-top" src=@item.ImageSrc alt=@item.Name/>
             <div class="card-body">
                 <h5 class="card-title">@item.Name</h5>
@@ -43,26 +57,28 @@
                 {
                     <p class="card-text">@field - @item.AdditionalFields[field]</p>
                 }
-                
+
                 <div class="flex-row">
                     @foreach (Tag tag in item.Tags)
                     {
                         <span class="badge bg-success ms-2 mt-1">@tag.Name</span>
                     }
                 </div>
-                
+            </div>
+
+            <div class="flex-row">
                 @if (_isOwner)
                 {
                     <a type="button" class="btn btn-primary" href=@($"/item/edit/{collection.Id}/{item.Id}")>Edit</a>
                 }
-                <a type="button" class="btn btn-primary" href=@($"/item/{collection.Id}/{item.Id}")>View</a>
+                <LikeComponent Location=@($"item-{item.Id}") />
                 @if (_isOwner)
                 {
                     <button type="button" class="btn btn-primary"
                             @onclick="() => RemoveItem(item.Id)">Delete</button>
                 }
                 <br/>
-                <LikeComponent Location=@($"item-{item.Id}") />
+                
             </div>
         </div>
     }
@@ -75,6 +91,7 @@
             </div>
         </div>
     }
+    </div>
 </div>
 
 @code {
@@ -90,9 +107,9 @@
         public int Height { get; set; }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        _isOwner = CurrentUser.UserName == collection.Owner;
+        _isOwner = CurrentUser is not null && CurrentUser.UserName == collection.Owner;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -111,10 +128,10 @@
     }
 
     private void ToEditCollection(int id) => navigationManager.NavigateTo("/collection/edit/" + id);
-    private void ToViewItem(int id) => navigationManager.NavigateTo("item/" + id);
+    private void ToViewItem(int id) => navigationManager.NavigateTo($"/item/{collection.Id}/{id}");
     private void ToCreateItem() => navigationManager.NavigateTo($"item/{collection.Id}/new");
 
-    private void RemoveItem(int id) =>
+           private void RemoveItem(int id) =>
         collectionService.RemoveItemFromCollectionAsync(
             collection,
             collection.Items.Find(itma => itma.Id == id));

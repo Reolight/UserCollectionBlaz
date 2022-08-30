@@ -67,4 +67,13 @@ public class LikeService
             .FirstOrDefaultAsync() ?? await CreateNew(location));
         return lk;
     }
+
+    public async Task<int> GetLikesCount(string location)
+    {
+        await using AppDbContext context = await _factory.CreateDbContextAsync();
+        return (await context.Likes
+            .Where(like => like.Position == location)
+            .Include(like => like.LikedBy)
+            .FirstAsync()).LikedBy.Count;
+    }
 }

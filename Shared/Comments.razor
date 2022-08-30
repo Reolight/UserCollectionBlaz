@@ -88,9 +88,10 @@
         hubConnection = new HubConnectionBuilder()
             .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
             .Build();
-        hubConnection.On<Comment>("ReceiveCom", ( Comment comment) =>{
-                                                                PostedComments.Add(comment);
-                                                                InvokeAsync(StateHasChanged);
+        hubConnection.On<Comment>("RecieveCom", (comment) =>
+        {
+            PostedComments.Add(comment);
+            InvokeAsync(StateHasChanged);
         });
 
         await hubConnection.StartAsync();
@@ -100,14 +101,15 @@
     {
         if (hubConnection is not null)
         {
-            ComVM comment = new ComVM()
+            await hubConnection.SendAsync("PostCom",
+                new Comment()
                 {
-                    AutorId = User.UserName,
-                    PlaceUrl = UrlKey,
                     Content = CurrentContent,
-                    Posted = DateTime.Now
-                };
-            await hubConnection.SendAsync("PostCom", comment);
+                    PlaceUrl = UrlKey,
+                    PostedTime = DateTime.Now,
+                    Autor = await userManager.FindByNameAsync(User.UserName)
+                });
+            
             await userService.HavePostedAnotherOne(User);
             CurrentContent = string.Empty;
         }

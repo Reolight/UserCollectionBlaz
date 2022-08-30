@@ -22,6 +22,21 @@ namespace UserCollectionBlaz.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
+            modelBuilder.Entity("AppUserLike", b =>
+                {
+                    b.Property<string>("AppUser")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("LikedById")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("AppUser", "LikedById");
+
+                    b.HasIndex("LikedById");
+
+                    b.ToTable("AppUserLike", (string)null);
+                });
+
             modelBuilder.Entity("ItemTag", b =>
                 {
                     b.Property<int>("ItemsId")
@@ -34,7 +49,7 @@ namespace UserCollectionBlaz.Migrations
 
                     b.HasIndex("TagsName");
 
-                    b.ToTable("ItemTag");
+                    b.ToTable("ItemTag", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -182,9 +197,6 @@ namespace UserCollectionBlaz.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("AppUser")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("AvatarSrc")
                         .HasColumnType("nvarchar(max)");
 
@@ -252,8 +264,6 @@ namespace UserCollectionBlaz.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AppUser");
-
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -295,7 +305,7 @@ namespace UserCollectionBlaz.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Collections");
+                    b.ToTable("Collections", (string)null);
                 });
 
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Comment", b =>
@@ -306,7 +316,7 @@ namespace UserCollectionBlaz.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("AutorId")
+                    b.Property<string>("AppUser")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Content")
@@ -320,9 +330,9 @@ namespace UserCollectionBlaz.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AutorId");
+                    b.HasIndex("AppUser");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Item", b =>
@@ -342,6 +352,9 @@ namespace UserCollectionBlaz.Migrations
                     b.Property<string>("ImageSrc")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("LikesPosition")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -350,9 +363,11 @@ namespace UserCollectionBlaz.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("LikesPosition");
+
                     b.HasIndex("collectionId");
 
-                    b.ToTable("Item");
+                    b.ToTable("Item", (string)null);
                 });
 
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Like", b =>
@@ -362,7 +377,7 @@ namespace UserCollectionBlaz.Migrations
 
                     b.HasKey("Position");
 
-                    b.ToTable("Likes");
+                    b.ToTable("Likes", (string)null);
                 });
 
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Tag", b =>
@@ -372,7 +387,22 @@ namespace UserCollectionBlaz.Migrations
 
                     b.HasKey("Name");
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
+                });
+
+            modelBuilder.Entity("AppUserLike", b =>
+                {
+                    b.HasOne("UserCollectionBlaz.Areas.Identity.Data.Like", null)
+                        .WithMany()
+                        .HasForeignKey("AppUser")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("UserCollectionBlaz.Areas.Identity.Data.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("LikedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ItemTag", b =>
@@ -441,13 +471,6 @@ namespace UserCollectionBlaz.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.AppUser", b =>
-                {
-                    b.HasOne("UserCollectionBlaz.Areas.Identity.Data.Like", null)
-                        .WithMany("LikedBy")
-                        .HasForeignKey("AppUser");
-                });
-
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Collection", b =>
                 {
                     b.HasOne("UserCollectionBlaz.Areas.Identity.Data.AppUser", "Owner")
@@ -461,16 +484,22 @@ namespace UserCollectionBlaz.Migrations
                 {
                     b.HasOne("UserCollectionBlaz.Areas.Identity.Data.AppUser", "Autor")
                         .WithMany("Comments")
-                        .HasForeignKey("AutorId");
+                        .HasForeignKey("AppUser");
 
                     b.Navigation("Autor");
                 });
 
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Item", b =>
                 {
+                    b.HasOne("UserCollectionBlaz.Areas.Identity.Data.Like", "Likes")
+                        .WithMany()
+                        .HasForeignKey("LikesPosition");
+
                     b.HasOne("UserCollectionBlaz.Areas.Identity.Data.Collection", "collection")
                         .WithMany("Items")
                         .HasForeignKey("collectionId");
+
+                    b.Navigation("Likes");
 
                     b.Navigation("collection");
                 });
@@ -485,11 +514,6 @@ namespace UserCollectionBlaz.Migrations
             modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Collection", b =>
                 {
                     b.Navigation("Items");
-                });
-
-            modelBuilder.Entity("UserCollectionBlaz.Areas.Identity.Data.Like", b =>
-                {
-                    b.Navigation("LikedBy");
                 });
 #pragma warning restore 612, 618
         }

@@ -19,18 +19,21 @@ public class AppDbContext : IdentityDbContext<AppUser>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        builder.Entity<Comment>()
-            .HasOne(comment => comment.Autor)
-            .WithMany(user => user.Comments);
-        builder.Entity<Item>()
-            .HasOne(item => item.collection)
-            .WithMany(col => col.Items);
-        builder.Entity<AppUser>()
-            .HasMany(user => user.Collections);
-        builder.Entity<Item>()
-            .HasMany(item => item.Tags)
-            .WithMany(item => item.Items);
-        builder.Entity<Like>()
-            .HasMany(like => like.LikedBy);
+        //builder.Entity<Comment>()
+        //    .HasOne(comment => comment.Autor)
+        //    .WithMany(user => user.Comments);
+        //builder.Entity<Item>()
+        //    .HasOne(item => item.collection)
+        //    .WithMany(col => col.Items);
+        //builder.Entity<AppUser>()
+        //    .HasMany(user => user.Collections);
+        //builder.Entity<Item>()
+        //    .HasMany(item => item.Tags)
+        //    .WithMany(item => item.Items);
+        //builder.Entity<Like>()
+        //    .HasMany(like => like.LikedBy)
+        //    .WithMany(user => user.Liked);
+        //builder.Entity<Item>()
+        //    .HasOne(item => item.Likes);
     }
 }
