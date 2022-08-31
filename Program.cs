@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
 using UserCollectionBlaz.Areas.Identity.Data;
 using UserCollectionBlaz.Data;
@@ -19,6 +20,14 @@ builder.Services.AddScoped<AppDbContext>(
 builder.Services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<AppDbContext>();
 
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    options.Password.RequiredUniqueChars = 0;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 4;
+    options.SignIn.RequireConfirmedAccount = false;
+});
+    
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();

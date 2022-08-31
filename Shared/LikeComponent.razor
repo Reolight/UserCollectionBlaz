@@ -5,8 +5,8 @@
 @inject NavigationManager _navigationManager
 @inject LikeService _likeService
 
-<button class="btn btn-outline-success" disabled=@(!_isAuthentificated) @onclick="Liked">
-    <div class="d-inline-flex flex-row">
+<button class="btn btn-outline-success flex-sm-wrap" disabled=@(!_isAuthentificated) @onclick="Liked">
+    <div class="d-inline-flex flex-row align-middle">
         <p>@_count</p>
 
         @if (!_isAuthentificated)

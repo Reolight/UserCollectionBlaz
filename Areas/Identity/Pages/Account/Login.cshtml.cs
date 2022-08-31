@@ -105,8 +105,6 @@ namespace UserCollectionBlaz.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
 
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
             if (ModelState.IsValid)
             {
                 // This doesn't count login failures towards account lockout
@@ -114,30 +112,28 @@ namespace UserCollectionBlaz.Areas.Identity.Pages.Account
                 var user = await _signInManager.UserManager.FindByNameAsync(Input.Name);
                 if (user.IsBlocked)
                 {
-                    _logger.LogWarning("User is banned and can't login");
-                    ModelState.AddModelError(string.Empty, "You banned (" + user.BannedSince + ") for " + user.BanLasts);
-                    return Page();
+                    if (user.BannedSince.Add(user.BanLasts) > DateTime.Now)
+                    {
+
+                        _logger.LogWarning(
+                            "{UserUserName} wass banned since {UserBannedSince} for {UserBanLasts} and can\'t login",
+                            user.UserName, user.BannedSince, user.BanLasts);
+                        ModelState.AddModelError(string.Empty, $"You were banned since {user.BannedSince} for {user.BanLasts}) (left {user.BannedSince.Add(user.BanLasts).Subtract(DateTime.Now)})");
+                        return Page();
+                    }
+
+                    user.IsBlocked = false;
                 }
+                
                 var result = await _signInManager.PasswordSignInAsync(user, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return Page();
-                }
+
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
             }
 
             // If we got this far, something failed, redisplay form

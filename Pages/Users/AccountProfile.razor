@@ -76,24 +76,28 @@ else
         </div>
     }
 
-    if (collections is null || collections.Count == 0){
-        <div class="bg-gradient bg-opacity-25 bg-secondary container shadow">
-            <h4 class="ps-5">There are no collections</h4>
-        </div>
-    }
-    else
+    @if (!_isEditing)
     {
-        @foreach (CollectionVM collection in collections)
+        if (collections is null || collections.Count == 0)
         {
-            <Collection collection=@collection CurrentUser=@user />
+            <div class="bg-gradient bg-opacity-25 bg-secondary container shadow">
+                <h4 class="ps-5">There are no collections</h4>
+            </div>
         }
-    }
+        else
+        {
+            @foreach (CollectionVM collection in collections)
+            {
+                <Collection collection=@collection CurrentUser=@user/>
+            }
+        }
 
-    @if (_isOwner)
-    {
-        <a class="btn btn-outline-primary" href="/collection/new">
-            Add collection
-        </a>
+        @if (_isOwner)
+        {
+            <a class="btn btn-outline-primary" href="/collection/new">
+                Add collection
+            </a>
+        }
     }
 }
 
@@ -121,8 +125,9 @@ else
         name ??= LoggedUserName;
         if (!string.IsNullOrEmpty(name)){
             user = userServ.GetHeavyUser(name);
-            _isOwner = LoggedUserName is null? false : LoggedUserName.ToLower().Equals(user.UserName.ToLower());
-
+            _isOwner = LoggedUserName is not null && (LoggedUserName.ToLower().Equals(user.UserName.ToLower()) || user.IsAdmin);
+            
+            
             int i;
 
             StyleWidth =

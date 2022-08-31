@@ -90,7 +90,8 @@ namespace UserCollectionBlaz.Service
             await dbContext.SaveChangesAsync();
             return true;
         }
-        public async Task<bool> BanHummer(string unluckyUser) => await BanHummerAsync(unluckyUser, new TimeSpan(0, 2, 28));
+        public async Task<bool> BanHummer(string unluckyUser) 
+            => await BanHummerAsync(unluckyUser, new TimeSpan(0, 2, 28));
         public async Task<bool> BanHummerAsync(string unluckyUser, TimeSpan banLasts)
         {
             AppUser user = await userManager.FindByNameAsync(unluckyUser);
@@ -98,6 +99,7 @@ namespace UserCollectionBlaz.Service
             user.BannedSince = DateTime.Now;
             user.BanLasts = banLasts;
             user.IsBlocked = true;
+            await dbContext.SaveChangesAsync();
             return true;
         }
     }

@@ -50,8 +50,7 @@
                             </div>
                         }
                         <div class="flex-row">
-                            <div class="dropdown input-group">
-                                @foreach (Tag tag in @EditableItem.Tags)
+                            @foreach (Tag tag in @EditableItem.Tags)
                                                             {
                                                                 <div class="btn-group-sm" role="group">
                                                                     <a class="btn btn-outline-primary">@tag.Name</a>
@@ -59,23 +58,13 @@
                                                                 </div>
                                                             }
                                                             
-                                <input type="text" class="form-control form-control-sm" @bind="_tag" @oninput="Autocompletion" placeholder="Input tags here"/>
-                                <ul class="dropdown-menu" role="menu">
-                                    @if (_Suggestions.Count == 0)
-                                    {
-                                        <li role="presentation"><a role="menuitem"><i>There is no such tag @_tag</i></a></li>
-                                    }
-                                    else
-                                    {
-                                        @foreach (string sug in _Suggestions)
+                                <input type="text" class="form-control" list="suggestions" id="suggestions" @bind="_tag" @oninput="Autocompletion" placeholder="Input tags here"/>
+                                <datalist id="suggestions">
+                                    @foreach (string sug in _Suggestions)
                                         {
-                                            <li role="presentation">
-                                                <button role="menuitem" @onclick="() => _tag = sug"></button>
-                                            </li>
+                                            <option value=@(sug)/>
                                         }
-                                    }
-                                </ul>
-                            </div>
+                                    </datalist>
                         </div>
                         
                         @if (AdditionalValidationErrors.Count > 0){
@@ -179,6 +168,7 @@
                     });
         _wasNull = ItemId is null;
         _cancellationAutocompletion = new CancellationToken();
+        _Suggestions = await collectionService.GetTagPool();
     }
 
     private async void SaveItem()
@@ -259,11 +249,6 @@
         EditableItem.Tags.Add(toAdd);
         _tag = "";
     }
-
-    private async Task MakeSuggestions(string putted)
-        => _Suggestions = _searchTagsByStart ?
-            await collectionService.GetFirstSixTagNamesBeginningFrom(putted)
-            : await collectionService.GetFirstSixTagNamesContainingSubstring(putted);
     
     private async Task Autocompletion(ChangeEventArgs args)
     {
@@ -272,8 +257,8 @@
         {
             if (putted[^1] == ' ')
                 await AddTag(putted.TrimEnd());
-            else
-                await MakeSuggestions(putted);
+
+            StateHasChanged();
         }
     }
 }

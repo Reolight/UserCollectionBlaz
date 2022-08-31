@@ -41,14 +41,14 @@ namespace UserCollectionBlaz.Service
         private async Task<List<Collection>> GetAllCollections()
             => await _context.Collections
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
-                .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .Include(col => col.Items).ThenInclude(item => item.Likes).ThenInclude(like => like.LikedBy)
                 .Include(collection => collection.Owner)
                 .ToListAsync();
         
         private async Task<List<Collection>> GetAllPublicCollections()
             => await _context.Collections.Where(collection => !collection.IsPrivate)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
-                .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .Include(col => col.Items).ThenInclude(item => item.Likes).ThenInclude(like => like.LikedBy)
                 .Include(collection => collection.Owner)
                 .ToListAsync();
         
@@ -58,7 +58,7 @@ namespace UserCollectionBlaz.Service
                                             where col.Id == Id
                                             select col)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
-                .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .Include(col => col.Items).ThenInclude(item => item.Likes).ThenInclude(like => like.LikedBy)
                 .Include(collection => collection.Owner)
                 .FirstOrDefaultAsync();
             return collection is not null ? new CollectionVM(collection) : null;
@@ -69,7 +69,7 @@ namespace UserCollectionBlaz.Service
                                                     where collection.Owner.UserName == name
                                                     select collection)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
-                .Include(col => col.Items).ThenInclude(item => item.Likes)
+                .Include(col => col.Items).ThenInclude(item => item.Likes).ThenInclude(like => like.LikedBy)
                 .Include(collection => collection.Owner)
                 .ToListAsync();
 
@@ -77,14 +77,7 @@ namespace UserCollectionBlaz.Service
                 ? ConvertCollectionToVM(collections)
                 : ConvertCollectionToVM(collections.Where(col => !col.IsPrivate).ToList());
         }
-        public async Task<List<CollectionVM>?> GetAllCollectionVMsAsync()
-        {
-            List<Collection> collections = await _context.Collections
-                .Include(col => col.Items).ThenInclude(item => item.Tags)
-                .Include(col => col.Items).ThenInclude(item => item.Likes)
-                .Include(collection => collection.Owner).ToListAsync();
-                return ConvertCollectionToVM(collections);
-            }
+
         public async Task<bool> AddCollectionAsync(CollectionVM collectionVM)
         {
             Collection collection = new()
@@ -193,27 +186,13 @@ namespace UserCollectionBlaz.Service
                                                                         select col).Include(col => col.Items)
             .ThenInclude(item => item.Tags).FirstOrDefault();
 
-        public async Task<List<string>> GetFirstSixTagNamesContainingSubstring(string? subs)
+        public async Task<List<string>> GetTagPool()
         {
-                return (subs is not null && Tags.Any())
-                    ? (from tag in Tags
-                        where tag.Name.ToLower().Contains(subs.ToLower())
-                        orderby tag.Name
-                        select tag.Name).Take(6).ToList()
-                    : new List<string>();
-            
+            return (Tags.Any())
+                ? Tags.Select(tag => tag.Name).ToList()
+                : new List<string>();
         }
 
-        public async Task<List<string>> GetFirstSixTagNamesBeginningFrom(string? subs)
-        {
-                return (subs is not null && Tags.Any()) ?
-                    (from tag in Tags
-                        where tag.Name.ToLower().StartsWith(subs.ToLower())
-                        orderby tag.Name
-                        select tag.Name).Take(6).ToList()
-                    : new List<string>();
-            }
-        
         public async Task<List<CollectionVM>> GetMostLikedCollections(int count, int page = 0)
         {
             List<CollectionVM> CollectionsVm = ConvertCollectionToVM(await GetAllPublicCollections());
