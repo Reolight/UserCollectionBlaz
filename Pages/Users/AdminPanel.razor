@@ -1,7 +1,6 @@
 ﻿@page "/account/users"
 @using UserCollectionBlaz.Areas.Identity.Data
 @using UserCollectionBlaz.ViewModel
-@using System.Drawing.Printing
 @inject Service.UserService userServ;
 @inject IHttpContextAccessor httpAccessor;
 @inject NavigationManager navigationManager;
@@ -10,7 +9,7 @@
 <div class="text-center">
     <h2 class="display-4">User panel</h2>
     <br />
-        <table class="table table-striped">
+    <table class="table table-striped">
         <tr>
             <th><input type="checkbox" id="CBAll" onclick="CheckedAll()"></th>
             <th>User name</th>
@@ -41,7 +40,7 @@
                         <td>
                             @if (user.IsAdmin) {
                                 <button class="btn btn-outline-dark" @onclick="() => { 
-                                AdminChange(user.UserName); if (CurrentUser.UserName == user.UserName) InvokeAsync(StateHasChanged); }">
+                                        AdminChange(user.UserName); if (CurrentUser.UserName == user.UserName) InvokeAsync(StateHasChanged); }">
                                     Deadminilize
                                 </button>
                             }
@@ -51,7 +50,16 @@
                                     Adminilize
                                 </button>
                             }
-                            <button style="color: black" class="btn btn-danger" disabled=@user.IsBlocked @onclick="() => Ban(user.UserName) ">Ban him</button>
+                            <button style="color: black" class="btn btn-danger" @onclick="() => Ban(user.UserName)">
+                                @if (user.IsBlocked)
+                                {
+                                    <p>@user.BannedSince.Add(user.BanLasts).ToString("g")</p>
+                                } 
+                                else
+                                {
+                                    <p>Ban</p>
+                                }
+                            </button>
                         </td>
                     }
                     else
@@ -65,7 +73,7 @@
         {
             <tr><td colspan=3>There are no users</td></tr>
         }
-        </table>
+    </table>
 </div>
 
 @code {

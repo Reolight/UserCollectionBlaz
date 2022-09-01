@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
@@ -17,8 +18,15 @@ builder.Services.AddPooledDbContextFactory<AppDbContext>(options =>
 builder.Services.AddScoped<AppDbContext>(
     p => p.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext());
 
-builder.Services.AddDefaultIdentity<AppUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<AppDbContext>();
+builder.Services.AddDefaultIdentity<AppUser>(
+        options =>
+        {
+            options.SignIn.RequireConfirmedAccount = false;
+            //options.User.RequireUniqueEmail = true;
+        }
+    )
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
 
 builder.Services.Configure<IdentityOptions>(options =>
 {
@@ -27,7 +35,12 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequiredLength = 4;
     options.SignIn.RequireConfirmedAccount = false;
 });
-    
+
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromMinutes(5);
+});
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
@@ -35,6 +48,7 @@ builder.Services.AddScoped<ComService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<CollectionService>();
+builder.Services.AddScoped<IEmailSender, EmailService>();
 builder.Services.AddTransient<LikeService>();
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.AddHttpClient();

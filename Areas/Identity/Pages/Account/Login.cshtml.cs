@@ -116,7 +116,7 @@ namespace UserCollectionBlaz.Areas.Identity.Pages.Account
                     {
 
                         _logger.LogWarning(
-                            "{UserUserName} wass banned since {UserBannedSince} for {UserBanLasts} and can\'t login",
+                            "{UserUserName} was banned since {UserBannedSince} for {UserBanLasts} and can\'t login",
                             user.UserName, user.BannedSince, user.BanLasts);
                         ModelState.AddModelError(string.Empty, $"You were banned since {user.BannedSince} for {user.BanLasts}) (left {user.BannedSince.Add(user.BanLasts).Subtract(DateTime.Now)})");
                         return Page();
