@@ -9,7 +9,7 @@ namespace UserCollectionBlaz.Service
     public class CollectionService
     {
         private readonly AppDbContext _context;
-        private readonly IDbContextFactory<AppDbContext> _factory;
+        private static IDbContextFactory<AppDbContext> _factory;
         private readonly UserManager<AppUser> userManager;
         private readonly CloudinaryService cloudinaryService;
         private static List<Tag> Tags;
@@ -24,14 +24,22 @@ namespace UserCollectionBlaz.Service
             Tags = _context.Tags.Include(tag => tag.Items).ToList();
         }
 
-        private static List<CollectionVM> ConvertCollectionToVM(List<Collection> collections)
+        private static async Task<List<CollectionVM>> ConvertCollectionToVM(List<Collection> collections)
         {
             List<CollectionVM> collectionVMs = new();
             if (collections is not null)
             {
                 foreach (Collection collection in collections)
                 {
-                    collectionVMs.Add(new CollectionVM(collection));
+                    await using AppDbContext context = await _factory.CreateDbContextAsync();
+                    CollectionVM collectionVm = new CollectionVM(collection);
+                    collection.Items
+                        .ForEach(item => collectionVm.Likes += context.Likes
+                            .Include(like => like.LikedBy)
+                            .First(like => like.Position.Contains($"{item.Id}")).LikedBy.Count);
+
+                    collectionVMs.Add(collectionVm);
+
                 }
             }
 
@@ -47,9 +55,9 @@ namespace UserCollectionBlaz.Service
         
         private async Task<List<Collection>> GetAllPublicCollections()
             => await _context.Collections.Where(collection => !collection.IsPrivate)
+                .Include(collection => collection.Owner)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
                 .Include(col => col.Items).ThenInclude(item => item.Likes).ThenInclude(like => like.LikedBy)
-                .Include(collection => collection.Owner)
                 .ToListAsync();
         
         public async Task<CollectionVM?> GetCollectionVMAsync(int? Id)
@@ -74,8 +82,8 @@ namespace UserCollectionBlaz.Service
                 .ToListAsync();
 
             return isOwner
-                ? ConvertCollectionToVM(collections)
-                : ConvertCollectionToVM(collections.Where(col => !col.IsPrivate).ToList());
+                ? await ConvertCollectionToVM(collections)
+                : await ConvertCollectionToVM(collections.Where(col => !col.IsPrivate).ToList());
         }
 
         public async Task<bool> AddCollectionAsync(CollectionVM collectionVM)
@@ -173,9 +181,13 @@ namespace UserCollectionBlaz.Service
             await _context.SaveChangesAsync();
             return true;
         }
-        public static Dictionary<string, string> UncompressAdditionalFields(string? compressed) 
-            => JsonSerializer.Deserialize<Dictionary<string, string>>(compressed) ?? new();
-        
+
+        public static Dictionary<string, string>? UncompressAdditionalFields(string? compressed)
+            => string.IsNullOrEmpty(compressed)
+                ? new Dictionary<string, string>()
+                : JsonSerializer.Deserialize<Dictionary<string, string>>(compressed);
+            
+
         public static string CompressAdditionalFields(Dictionary<string, string> uncompressed)
         {
             if (uncompressed is null || uncompressed.Count == 0) return "";
@@ -195,7 +207,7 @@ namespace UserCollectionBlaz.Service
 
         public async Task<List<CollectionVM>> GetMostLikedCollections(int count, int page = 0)
         {
-            List<CollectionVM> CollectionsVm = ConvertCollectionToVM(await GetAllPublicCollections());
+            List<CollectionVM> CollectionsVm = await ConvertCollectionToVM(await GetAllPublicCollections());
             return CollectionsVm.OrderByDescending(vm => vm.Likes).Skip(count * page).Take(count).ToList();
         }
 

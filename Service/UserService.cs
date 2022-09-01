@@ -41,7 +41,10 @@ namespace UserCollectionBlaz.Service
 
         public IEnumerable<AppUser>? GetAll()
         {
-            return userManager.Users.ToList();
+            var users = userManager.Users.ToList();
+            users.Where(user => user.IsBlocked).ToList()
+                .ForEach(user => user.IsBlocked = user.BannedSince.Add(user.BanLasts) > DateTime.Now);
+            return users;
         }
 
         private bool IsLevelRequirementsAchieved(AppUser user)

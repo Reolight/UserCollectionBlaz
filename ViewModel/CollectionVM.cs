@@ -32,7 +32,7 @@ namespace UserCollectionBlaz.ViewModel
             Owner = collection.Owner.UserName;
             AdditionalFieldsInfo = Service.CollectionService.UncompressAdditionalFields(collection.AdditionalFieldsInfo);
             Items = new List<ItemVM>();
-            collection.Items.ForEach(item => Likes += item.Likes is null? 0 : item.Likes.LikedBy.Count);
+            
             if (collection.Items is not null)
             {
                 foreach (Item item in collection.Items)

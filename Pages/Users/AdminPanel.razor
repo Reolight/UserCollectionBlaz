@@ -26,7 +26,8 @@
         {
             @foreach(AppUser user in Users)
             {
-                <tr>
+                <tr style=@(user.IsBlocked? "background: #dfc2c4":
+                              user.IsAdmin? "background: darkseagreen" : "color: black")>
                     <th><input type="checkbox" name="CB" id=${user.Name} /></th>
                     <td><img @onclick="() => NavigateTo(user.UserName)" class="rounded-circle" src=@user.AvatarSrc width="32" height="32"/>@user.UserName</td>
                     <td>@user.PostedTimes</td>
@@ -50,7 +51,7 @@
                                     Adminilize
                                 </button>
                             }
-                            <button class="btn btn-danger" @onclick="() => Ban(user.UserName) ">Ban him</button>
+                            <button style="color: black" class="btn btn-danger" disabled=@user.IsBlocked @onclick="() => Ban(user.UserName) ">Ban him</button>
                         </td>
                     }
                     else
