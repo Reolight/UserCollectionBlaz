@@ -1,22 +1,23 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using UserCollectionBlaz.Areas.Identity.Data
-@using Microsoft.AspNetCore.SignalR.Client
+
 @using UserCollectionBlaz.ViewModel
+@using System.Diagnostics
 @inject IHttpContextAccessor httpAccessor
 @inject UserCollectionBlaz.Service.ComService commentsService
 @inject UserCollectionBlaz.Service.UserService userService
 @inject NavigationManager navigationManager
 @inject UserManager<AppUser> userManager
 @inject Service.LikeService _likeService
-@implements IAsyncDisposable
-
+@inject Service.HubService HubService
+@inject IJSRuntime JS
 
 <div class="container">
     @if (User is not null)
     {
         <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto shadow w-100 mb-5 mt-5">
             <img src=@User.AvatarSrc class="d-inline-flex flex-row rounded-circle" data-bs-placement="top" width="64" height="64" alt="Avatar" />
-            <div class="d-flex flex-column">
+            <div class="d-flex flex-column w-75">
                 <div class="ps-3 w-100">
                     <div class="d-inline-flex flex-row">
                         <header class="d-inline-flex flex-row">
@@ -24,7 +25,8 @@
                         </header>
                     </div>
                 </div>
-                <textarea @bind="CurrentContent" placeholder="Enter your comment" class="w-100"></textarea>
+
+                <textarea id="summerCom" @bind="CurrentContent" placeholder="Enter your comment" class="w-100"></textarea>
                 <button class="btn btn-outline-success" @onclick="() => Post()" disabled=@isPosting>Post comment</button>
             </div>
         </div>
@@ -35,7 +37,7 @@
             <p class="comment-text">Log in to leave a comment</p>
         </div>
     }
-    @if (PostedComments is null || PostedComments.Count == 0)
+    @if (_postedComments is null || _postedComments.Count == 0)
     {
         <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto shadow w-100">
             <p class="comment-text">There are no comments yet</p>
@@ -43,7 +45,7 @@
     }
     else
     {
-        @foreach (Comment comment in PostedComments)
+        @foreach (Comment comment in _postedComments)
         {
             <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row shadow w-100 mb-3 mt-3">
                 <img src=@comment.Autor.AvatarSrc class="d-inline-flex flex-row rounded-circle" data-bs-placement="top" width="64" height="64" alt="Avatar" />
@@ -69,39 +71,37 @@
     }
 </div>
 
-
 @code {
     private UserVM? User;
     private string? UrlKey;
     private string? CurrentContent;
-    private HubConnection? hubConnection;
-    private List<Comment>? PostedComments = new();
-    private List<LikeVM>? Likes = new();
+
+    private List<Comment> _postedComments = new();
+    private List<LikeVM>? _likes = new();
     private bool isPosting;
-    private bool isHubConnected => hubConnection?.State == HubConnectionState.Connected;
+
 
     protected override async Task OnInitializedAsync()
     {
         UrlKey = navigationManager.Uri.Replace(navigationManager.BaseUri, "");
-        PostedComments = commentsService.GetAllByKey(UrlKey)?.OrderByDescending(com => com.PostedTime).ToList() ?? new List<Comment>();
+        _postedComments = (await commentsService.GetAllByKey(UrlKey) ?? new List<Comment>()).OrderByDescending(com => com.PostedTime).ToList();
         User = await userService.GetVM(httpAccessor.HttpContext.User.Identity.Name);
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(navigationManager.ToAbsoluteUri("/comhub"))
-            .Build();
-        hubConnection.On<Comment>("RecieveCom", (comment) =>
-        {
-            PostedComments.Add(comment);
-            InvokeAsync(StateHasChanged);
-        });
-
-        await hubConnection.StartAsync();
+        
     }
+
+    protected override void OnParametersSet()
+        => HubService.OnCommentChange += async (comment) =>
+            {
+                _postedComments.Add(comment);
+                await InvokeAsync(StateHasChanged);
+            };
+
+//    public async void Receive(Comment 
 
     private async Task Post()
     {
-        if (hubConnection is not null)
-        {
-            await hubConnection.SendAsync("PostCom",
+        Debug.Assert(User is not null);
+            await commentsService.Add(
                 new Comment()
                 {
                     Content = CurrentContent,
@@ -109,19 +109,10 @@
                     PostedTime = DateTime.Now,
                     Autor = await userManager.FindByNameAsync(User.UserName)
                 });
-            
-            await userService.HavePostedAnotherOne(User);
-            CurrentContent = string.Empty;
-        }
+        
+        await userService.HavePostedAnotherOne(User);
+        CurrentContent = string.Empty;
     }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (hubConnection is not null)
-        {
-            await hubConnection.DisposeAsync();
-        }
-    }
-
+    
     private void NavigateTo(string userName) => navigationManager.ToAbsoluteUri("profile/" + userName);
 }

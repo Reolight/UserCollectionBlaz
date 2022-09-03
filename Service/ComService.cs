@@ -1,6 +1,5 @@
 ﻿using UserCollectionBlaz.Areas.Identity.Data;
 using Microsoft.EntityFrameworkCore;
-using UserCollectionBlaz.ViewModel;
 using Microsoft.AspNetCore.Identity;
 
 namespace UserCollectionBlaz.Service
@@ -10,41 +9,24 @@ namespace UserCollectionBlaz.Service
     /// </summary>
     public class ComService
     {
-        private readonly AppDbContext _context;
         private readonly UserManager<AppUser> _userManager;
-        public ComService(AppDbContext dbContext, UserManager<AppUser> userManager)
+        private readonly IDbContextFactory<AppDbContext> _factory;
+        private readonly HubService _hubService;
+        
+        public ComService(AppDbContext dbContext, UserManager<AppUser> userManager, IDbContextFactory<AppDbContext> factory, HubService hubService)
         {
-            _context = dbContext;
             _userManager = userManager;
+            _factory = factory;
+            _hubService = hubService;
         }
 
-        public async void Add(ComVM comVM)
-        {
-            Add(new Comment()
-            {
-                Content = comVM.Content,
-                Autor = await _userManager.FindByNameAsync(comVM.AutorId),
-                PlaceUrl = comVM.PlaceUrl,
-                PostedTime = comVM.Posted
-            });
-        }
         public async Task Add(Comment item)
         {
-            _context.Comments.Add(item);
-            await _context.SaveChangesAsync();
-        }
-
-        public Comment? Get(int id)
-        {
-            return (from a in _context.Comments
-                    where a.Id == id 
-                    orderby a.PostedTime descending 
-                    select a).Include(com => com.Autor).First();
-        }
-
-        public IEnumerable<Comment>? GetAll()
-        {
-            return _context.Comments.Include(com => com.Autor).ToList();
+            await using AppDbContext db = await _factory.CreateDbContextAsync();
+            db.Users.Attach(item.Autor);
+            db.Comments.Add(item);
+            await db.SaveChangesAsync();
+            await _hubService.SendAsync(item);
         }
 
 
@@ -53,18 +35,15 @@ namespace UserCollectionBlaz.Service
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public IEnumerable<Comment>? GetAllByKey(string key)
+        public async Task<IEnumerable<Comment>?> GetAllByKey(string key)
         {
-            return _context.Comments
+            await using AppDbContext db = await _factory.CreateDbContextAsync();
+            return await db.Comments
                 .Where(com => com.PlaceUrl == key)
                 .Include(com => com.Autor)
-                .Select(com => com);
+                .Select(com => com).ToListAsync();
         }
-
-        public async Task Remove(Comment item)
-        {
-            _context.Comments.Remove(item);
-            await _context.SaveChangesAsync();
-        }
+        
+        
     }
 }

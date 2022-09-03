@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.Linq.Dynamic.Core;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using UserCollectionBlaz.Areas.Identity.Data;
 using UserCollectionBlaz.ViewModel;
@@ -34,9 +35,13 @@ namespace UserCollectionBlaz.Service
                     await using AppDbContext context = await _factory.CreateDbContextAsync();
                     CollectionVM collectionVm = new CollectionVM(collection);
                     collection.Items
-                        .ForEach(item => collectionVm.Likes += context.Likes
-                            .Include(like => like.LikedBy)
-                            .First(like => like.Position.Contains($"{item.Id}")).LikedBy.Count);
+                        .ForEach(item =>
+                        {
+                            Like? like = context.Likes
+                                .Include(like => like.LikedBy)
+                                .FirstOrDefault(like => like.Position.Contains($"{item.Id}"));
+                            collectionVm.Likes += like is null? 0 : like.LikedBy.Count;
+                        });
 
                     collectionVMs.Add(collectionVm);
 
@@ -143,7 +148,7 @@ namespace UserCollectionBlaz.Service
         {
             Collection? collection = GetCollection(item.collection);
             if (collection is null) return false;
-            collection.Items.Add(new Item
+            Item newItem = new Item
             {
                 Name = item.Name,
                 Description = item.Description,
@@ -151,7 +156,10 @@ namespace UserCollectionBlaz.Service
                 ImageSrc = item.ImageSrc,
                 Tags = item.Tags,
                 AdditionalFields = CompressAdditionalFields(item.AdditionalFields)
-            });
+            };
+
+            _context.AttachRange(newItem.Tags);
+            collection.Items.Add(newItem);
             await _context.SaveChangesAsync();
             return true;
         }

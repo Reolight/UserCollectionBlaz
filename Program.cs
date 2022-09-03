@@ -1,13 +1,10 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
+using Radzen;
 using UserCollectionBlaz.Areas.Identity.Data;
 using UserCollectionBlaz.Data;
-using UserCollectionBlaz.Server;
 using UserCollectionBlaz.Service;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +41,8 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddScoped<DialogService>();
+builder.Services.AddSingleton<HubService>();
 builder.Services.AddScoped<ComService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<CloudinaryService>();
@@ -82,5 +81,4 @@ app.UseEndpoints(endpoints =>
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-app.MapHub<CommentsHub>("/comhub");
 app.Run();

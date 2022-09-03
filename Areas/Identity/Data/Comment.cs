@@ -11,6 +11,7 @@ namespace UserCollectionBlaz.Areas.Identity.Data
         public int Id { get; set; }
         public string PlaceUrl { get; set; }
         [ForeignKey("AppUser")]
+        [System.Text.Json.Serialization.JsonIgnore]
         public AppUser Autor { get; set; }
         public string Content { get; set; }
         public DateTime PostedTime { get; set; }

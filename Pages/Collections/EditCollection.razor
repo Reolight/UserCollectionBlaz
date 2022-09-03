@@ -35,10 +35,8 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="formInput19" class="form-label mt-3">Collection description</label>
-                            <textarea class="form-control" @bind="EditableCollection.Description" id="formInput19" rows="3" placeholder="Collection descriprion">
-
-                            </textarea> 
+                            <label class="form-label mt-3">Collection description</label>
+                            <RadzenHtmlEditor @bind-value="@EditableCollection.Description" style="height: 400px; margin-bottom: 1rem;" />
                         </div>
 
                         <div class="form-check">

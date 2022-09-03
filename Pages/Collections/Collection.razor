@@ -45,53 +45,56 @@
         
     </div>
     <div class="collapse" id="@($"collapse{collection.Id}")">
-    @foreach (ItemVM item in collection.Items)
-    {
-        <div class="card container-sm d-sm-inline-flex flex-column mw-100" style=@($"width: {_dimension.Width}px")>
-            <div @onclick="() => ToViewItem(item.Id)">
-                <img class="card-img-top" src=@item.ImageSrc alt=@item.Name/>
-                <div class="card-body">
-                    <h5 class="card-title">@item.Name</h5>
-                    <p class="card-text">@item.Description</p>
-                </div>
+        <div class="mb-1 mt-1">
+            <p>@((MarkupString)collection.Description)</p>
+        </div>
+        @foreach (ItemVM item in collection.Items)
+        {
+            <div class="card container-sm d-sm-inline-flex flex-column mw-100" style=@($"width: {_dimension.Width}px")>
+                <div @onclick="() => ToViewItem(item.Id)">
+                    <img class="card-img-top" src=@item.ImageSrc alt=@item.Name/>
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Name</h5>
+                        <p class="card-text">@((MarkupString)item.Description)</p>
+                    </div>
                     @foreach (string field in item.AdditionalFields.Keys)
-                {
-                    <p class="card-text">@field - @item.AdditionalFields[field]</p>
-                }
-
-                <div class="flex-row">
-                    @foreach (Tag tag in item.Tags)
                     {
-                        <span class="badge bg-success ms-2 mt-1">@tag.Name</span>
+                        <p class="card-text">@field - @item.AdditionalFields[field]</p>
                     }
+
+                    <div class="flex-row">
+                        @foreach (Tag tag in item.Tags)
+                        {
+                            <span class="badge bg-success ms-2 mt-1">@tag.Name</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="d-inline-flex flex-row">
+                    @if (_isOwner)
+                    {
+                        <a type="button" class="btn btn-primary" href=@($"/item/edit/{collection.Id}/{item.Id}")>Edit</a>
+                    }
+                    <LikeComponent Location=@($"item-{item.Id}") />
+                    @if (_isOwner)
+                    {
+                        <button type="button" class="btn btn-primary"
+                                @onclick="() => RemoveItem(item.Id)">Delete</button>
+                    }
+                    <br/>
+
                 </div>
             </div>
-
-            <div class="d-inline-flex flex-row">
-                @if (_isOwner)
-                {
-                    <a type="button" class="btn btn-primary" href=@($"/item/edit/{collection.Id}/{item.Id}")>Edit</a>
-                }
-                <LikeComponent Location=@($"item-{item.Id}") />
-                @if (_isOwner)
-                {
-                    <button type="button" class="btn btn-primary"
-                            @onclick="() => RemoveItem(item.Id)">Delete</button>
-                }
-                <br/>
-                
+        }
+        @if (_isOwner)
+        {
+            <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
+                <img class="card-img-top" alt="Add another item"/>
+                <div class="card-body">
+                    <button @onclick="ToCreateItem" class="btn btn-primary">Add</button>
+                </div>
             </div>
-        </div>
-    }
-    @if (_isOwner)
-    {
-        <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
-            <img class="card-img-top" alt="Add another item"/>
-            <div class="card-body">
-                <button @onclick="ToCreateItem" class="btn btn-primary">Add</button>
-            </div>
-        </div>
-    }
+        }
     </div>
 </div>
 

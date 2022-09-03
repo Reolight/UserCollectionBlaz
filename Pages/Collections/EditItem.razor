@@ -33,9 +33,9 @@
                             <input type="text" @bind=@EditableItem.Name class="form-control" placeholder="Enter item name" aria-label="Item name" aria-describedby="basic-addon1" />
                         </div>
 
-                        <label for="formInput19" class="form-label mt-3">Item description</label>
                         <div class="mb-3">
-                            <textarea class="form-control" @bind=@EditableItem.Description id="formInput19" rows="3" placeholder="Tell us about your item"></textarea>
+                            <label class="form-label mt-3">Item description</label>
+                            <RadzenHtmlEditor @bind-value="@EditableItem.Description" style="height: 400px; margin-bottom: 1rem;" />
                         </div>
 
                         <div class="form-floating">

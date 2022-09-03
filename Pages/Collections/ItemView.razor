@@ -14,7 +14,7 @@
             <img src=@itemVm.ImageSrc alt=@itemVm.Name class="m-3 w-50"/>
             <LikeComponent Location=@($"item-{itemVm.Id}") />
             <div class="w-50">
-                <p class="mt-5">@itemVm.Description</p>
+                <p class="mt-5">@((MarkupString)itemVm.Description)</p>
             </div>
         </div>
         @if (itemVm.AdditionalFields.Count > 0)

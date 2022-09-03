@@ -166,6 +166,8 @@ else
             EditUserData = new();
             EditUserData = new UserVM(user);
         }
+        
+        StateHasChanged();
     }
 
     private void Upload(InputFileChangeEventArgs e)

@@ -59,12 +59,16 @@ namespace UserCollectionBlaz.Service
             return false;
         }
 
-        public async Task<bool> HavePostedAnotherOne(UserVM user) 
-            => await HavePostedAnotherOne(await userManager.FindByNameAsync(user.UserName));
+        public async Task HavePostedAnotherOne(UserVM user)
+        {
+            await HavePostedAnotherOne(await userManager.FindByNameAsync(user.UserName));
+        }
+
         public async Task<bool> HavePostedAnotherOne(AppUser user)
         {
             if (user.Level == 0) user.Level = 1;
             user.PostedTimes++;
+            await dbContext.SaveChangesAsync();
             return IsLevelRequirementsAchieved(user);
         }
         

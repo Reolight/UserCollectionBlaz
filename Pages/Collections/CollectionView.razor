@@ -11,7 +11,7 @@
     </div>
     <div>
         <p><b>Description:</b>
-            @_collectionVm.Description
+            @((MarkupString)_collectionVm.Description)
         </p>
     </div>
     <div class="flex-row">
@@ -48,7 +48,7 @@
     [Parameter] public int CollectionId { get; set; }
     private CollectionVM? _collectionVm;
     private string? UserViewer;
-    
+
     protected override async Task OnInitializedAsync()
     {
         _collectionVm = await _collectionService.GetCollectionVMAsync(CollectionId);
