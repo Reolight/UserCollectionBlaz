@@ -12,13 +12,13 @@
 @inject Service.HubService HubService
 @inject IJSRuntime JS
 
-<div class="container">
+<div class="container" style="margin: auto;width:60%;min-width:350px;">
     @if (User is not null)
     {
-        <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto shadow w-100 mb-5 mt-5">
+        <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto w-100 shadow mb-5 mt-5">
             <img src=@User.AvatarSrc class="d-inline-flex flex-row rounded-circle" data-bs-placement="top" width="64" height="64" alt="Avatar" />
-            <div class="d-flex flex-column w-75">
-                <div class="ps-3 w-100">
+            <div class="d-flex flex-column w-100 ms-3 me-3">
+                <div class="ps-3 w-100 mb-2">
                     <div class="d-inline-flex flex-row">
                         <header class="d-inline-flex flex-row">
                             <b>@User.UserName</b><span class="badge bg-success ms-2 mt-1">@User.Level</span>
@@ -26,8 +26,8 @@
                     </div>
                 </div>
 
-                <textarea id="summerCom" @bind="CurrentContent" placeholder="Enter your comment" class="w-100"></textarea>
-                <button class="btn btn-outline-success" @onclick="() => Post()" disabled=@isPosting>Post comment</button>
+                <textarea id="summerCom" @bind="CurrentContent" placeholder="Enter your comment" class="w-100 mb-2"></textarea>
+                <button class="btn btn-outline-success" style="width:150px" @onclick="() => Post()" disabled=@isPosting>Post comment</button>
             </div>
         </div>
     }
@@ -47,7 +47,7 @@
     {
         @foreach (Comment comment in _postedComments)
         {
-            <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row shadow w-100 mb-3 mt-3">
+            <div class="bg-opacity-25 bg-secondary d-inline-flex flex-row me-auto w-100 shadow mb-5 mt-5">
                 <img src=@comment.Autor.AvatarSrc class="d-inline-flex flex-row rounded-circle" data-bs-placement="top" width="64" height="64" alt="Avatar" />
                 <div class="ps-3">
                     <div class="d-inline-flex flex-row">

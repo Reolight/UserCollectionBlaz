@@ -29,7 +29,6 @@ namespace UserCollectionBlaz.Service
             await _hubService.SendAsync(item);
         }
 
-
         /// <summary>
         /// This method is design for retrieving comments which are belong to particular Url
         /// </summary>

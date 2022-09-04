@@ -49,6 +49,7 @@ builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<CollectionService>();
 builder.Services.AddScoped<IEmailSender, EmailService>();
 builder.Services.AddTransient<LikeService>();
+builder.Services.AddTransient<SearchService>();
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.AddHttpClient();
 builder.Services.AddResponseCompression(opts =>

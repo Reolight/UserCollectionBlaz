@@ -7,42 +7,42 @@
 @if (itemVm is not null)
 {
     <div class="container d-inline-flex flex-column">
-        <div class="d-inline-flex mb-3 me-5 ms-5 mt-3">
-            <h3>@itemVm.Name</h3>
-        </div>
-        <div class="d-inline-flex flex-row">
-            <img src=@itemVm.ImageSrc alt=@itemVm.Name class="m-3 w-50"/>
-            <LikeComponent Location=@($"item-{itemVm.Id}") />
-            <div class="w-50">
-                <p class="mt-5">@((MarkupString)itemVm.Description)</p>
+        <div class="flex-row">
+            <img src=@itemVm.ImageSrc alt=@itemVm.Name class="m-3" style="min-width: 350px;"/>
+            
+            <div style="min-width: 350px;">
+                <h3 class="mt-3 me-5 ms-5">@itemVm.Name</h3>
+                <p>@((MarkupString)itemVm.Description)</p>
+                @if (itemVm.AdditionalFields.Count > 0)
+                        {
+                            <div class="container flex-column">
+                                @foreach (string key in itemVm.AdditionalFields.Keys)
+                                {
+                                    @if (CollectionVM.AdditionalFieldsInfo[key] == "bool")
+                                    {
+                                        <input type="checkbox" @bind="itemVm.AdditionalFields[key]" disabled="disabled"/>
+                                        <b>@(key):</b>
+                                    }
+                                    else
+                                    {
+                                        <p class="mb-3">
+                                            <b>@(key):</b>
+                                            @itemVm.AdditionalFields[key]
+                                        </p>
+                                    }
+                                }
+                            </div>
+                        }
+                <div class="flex-row mb-3" style="text-align:right">
+                                        @foreach (Tag tag in itemVm.Tags)
+                                        {
+                                            <TagComponent TagItem="tag" />
+                                        }
+                                    </div>
+                <LikeComponent Location=@($"item-{itemVm.Id}") />
             </div>
         </div>
-        @if (itemVm.AdditionalFields.Count > 0)
-        {
-            <div class="container d-inline-flex flex-column">
-                @foreach (string key in itemVm.AdditionalFields.Keys)
-                {
-                    @if (CollectionVM.AdditionalFieldsInfo[key] == "bool")
-                    {
-                        <input type="checkbox" @bind="itemVm.AdditionalFields[key]" disabled="disabled"/>
-                        <b>@(key):</b>
-                    }
-                    else
-                    {
-                        <p class="mb-3">
-                            <b>@(key):</b>
-                            @itemVm.AdditionalFields[key]
-                        </p>
-                    }
-                }
-            </div>
-        }
-        <div class="flex-row-reverse d-sm-inline">
-            @foreach (string name in itemVm.Tags.Select(tag => tag.Name).ToList())
-            {
-                <span class="badge bg-primary ms-2 mt-1">@name</span>
-            }
-        </div>
+        
     </div>
 
     <Comments/>

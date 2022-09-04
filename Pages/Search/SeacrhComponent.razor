@@ -1,0 +1,83 @@
+﻿@page "/searching/{Query}"
+@using UserCollectionBlaz.ViewModel
+@using NuGet.Packaging
+@inject Service.SearchService _SearchService
+@inject NavigationManager _Navigation
+
+<div class="flex-column">
+    <div class="flex-row">
+        <p>Search for: </p>
+        <input @bind="Query" type="search"/>
+        <button class="btn btn-outline-primary" @onclick="SearchFor">Search</button>
+    </div>
+<div class="btn-group-sm">
+    <button class=@(_searchInCollections ? _checked : _unchecked) 
+            @onclick="() => { _searchInCollections = !_searchInCollections; SearchFor();}">
+        Collections
+    </button>
+    <button class="@(_searchInItems ? _checked : _unchecked)" 
+            @onclick="() => {_searchInItems = !_searchInItems; SearchFor();}">
+        Items
+    </button>
+    <button class="@(_searchInComments ? _checked : _unchecked)" 
+            @onclick="() => {_searchInComments = !_searchInComments; SearchFor();}">
+        Comments
+    </button>
+</div>
+</div>
+
+<table class="table table-striped">
+    @if (_resultVms.Count == 0)
+    {
+        <h4>There is no such @(_searchInCollections? " collection":"") @(_searchInItems?"item":"") @(_searchInComments?"comment":"")</h4>
+    }
+    else
+    {
+        @foreach (SearchResultVM resultVm in _resultVms)
+        {
+            <tr @onclick="() => _Navigation.NavigateTo(resultVm.PostedAt)">
+                <td><img class="rounded-circle" width="64" height="64" src=@resultVm.ImageSrc></td>
+                <td>@($"({resultVm.AutorName}) {resultVm.Name}")</td>
+                <td>@((MarkupString)resultVm.Content)</td>
+                <td>Score: @resultVm.Score</td>
+                <td class="flex-column">
+                    @if (resultVm.tags is not null)
+                    {
+                        @foreach (string tag in resultVm.tags)
+                        {
+                            <TagComponent Name=@tag IsSelected=@(Query.Contains(tag)) />
+                        }
+                    }
+                </td>
+            </tr>
+        }
+    }
+</table>
+
+@code {
+    [Parameter] public string Query { get; set; }
+    private List<SearchResultVM> _resultVms = new ();
+    string _checked = "btn btn-outline-success active";
+    string _unchecked = "btn btn-outline-success";
+
+    bool _searchInItems = true;
+    bool _searchInCollections = true;
+    bool _searchInComments = true;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var res = await _SearchService.SearchFor(Query, _searchInItems, _searchInCollections, _searchInComments);
+        if (res is not null && res.Count > 0)
+            _resultVms.AddRange(res);
+        StateHasChanged();
+    }
+
+    private async void SearchFor()
+    {
+        var res = await _SearchService.SearchFor(Query, _searchInItems, _searchInCollections, _searchInComments);
+        if (res is not null && res.Count > 0)
+            _resultVms = res;
+        else _resultVms = new();
+        StateHasChanged();
+    }
+}

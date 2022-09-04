@@ -12,7 +12,7 @@
     <div class="d-inline-flex flex-row">
         <div class="col">
             <span class="align-bottom">
-                <a href=@($"/collection/{collection.Id}")>
+                <a class="nav-item" href=@($"/collection/{collection.Id}")>
                 @if (collection.IsPrivate)
                 {
                     <h4 class="ps-5"><i>@collection.Name</i></h4>
@@ -65,7 +65,7 @@
                     <div class="flex-row">
                         @foreach (Tag tag in item.Tags)
                         {
-                            <span class="badge bg-success ms-2 mt-1">@tag.Name</span>
+                            <TagComponent TagItem=@tag />
                         }
                     </div>
                 </div>

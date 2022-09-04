@@ -34,7 +34,7 @@
                 <img src=@item.ImageSrc alt=@item.Name/>
                 <div class="btn-group" role="group">
                     <a href=@($"/item/{_collectionVm.Id}/{item.Id}") class="btn btn-primary">View</a>
-                    <button class="btn btn-outline-success">Laik</button>
+                    <LikeComponent Location=@($"item-{item.Id}") />
                 </div>
             </div>
         }

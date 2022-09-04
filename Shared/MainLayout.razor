@@ -3,6 +3,7 @@
 @inherits LayoutComponentBase
 @inject IHttpContextAccessor HttpAccessor
 @inject UserCollectionBlaz.Service.UserService userService
+@inject NavigationManager _navigationManager
 
 <PageTitle>UserCollectionBlaz</PageTitle>
 
@@ -59,10 +60,10 @@
                         </li>
                     </ul>
 
-                    <form class="d-flex">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
-                        <button class="btn btn-outline-success" type="submit">Search</button>
-                    </form>
+                    <div class="d-flex">
+                        <input class="form-control me-2" @bind="_query" placeholder="Search" aria-label="Search" />
+                        <button class="btn btn-outline-success" @onclick="SearchFor">Search</button>
+                    </div>
                 </div>
             </div>
         </nav>
@@ -79,10 +80,18 @@
 @code{
     private UserVM? user ;
     private string? ProfileUrl;
+    private string _query = "";
 
     protected override async Task OnInitializedAsync()
     {
         user = await userService.GetVM(HttpAccessor.HttpContext?.User.Identity?.Name);
         if (user is not null ) ProfileUrl = "profile/" + user.UserName;
+    }
+
+    private void SearchFor()
+    {
+        if (!string.IsNullOrWhiteSpace(_query))
+            _navigationManager.NavigateTo($"/searching/{_query}");
+        _query = "";
     }
 }
