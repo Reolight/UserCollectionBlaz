@@ -1,0 +1,44 @@
+﻿@using UserCollectionBlaz.Areas.Identity.Data
+@inject Service.CollectionService _CollectionService;
+
+<div class="container" style="width: 350px">
+    <h3>TagCloud</h3>
+        
+    <ul class="cloud">
+    @foreach (Tag tag in _tags)
+        {
+            <li style=@MakeDecision(tag)>
+                <TagComponent TagItem="tag" IsBadge="false" />
+            </li>    
+        }
+    </ul>
+</div>
+
+@code {
+    private List<Tag> _tags = new ();
+    private int _itemsCount;
+        private const string XSmall = "font-size: x-small;";
+        private const string Small = "font-size: small";
+        private const string Medium = "font-size: medium;";
+        private const string Large = "font-size: large;";
+        private const string XLarge = "font-size: x-large;";
+        private const string XXLarge = "font-size: xx-large;";
+        
+    protected override async Task OnInitializedAsync()
+    {
+        _tags = await _CollectionService.GetAllTags();
+        _itemsCount = await _CollectionService.GetItemCount();
+    }
+
+    private string MakeDecision(Tag tag)
+        => ((int)(tag.Items.Count / (double)_itemsCount * 100.0)) switch
+        {
+            <= 6 => XSmall,
+            <= 12 => Small,
+            <= 18 => Medium,
+            <= 24 => Large,
+            <= 30 => XLarge,
+            _ => XXLarge
+        };
+    
+}

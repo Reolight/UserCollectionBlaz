@@ -8,13 +8,7 @@
 <div class="container">
     <div class="row">
         <div class="col">
-            @if (_tagsPool.Count > 0)
-            {
-                @foreach (Tag tag in _tagsPool)
-                {
-                    <p>@(tag.Name): @(tag.Items.Count)</p>
-                }
-            }
+            <TagCloud />
         </div>
         
         <div class="col-6">

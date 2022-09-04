@@ -52,12 +52,15 @@ namespace UserCollectionBlaz.Service
         }
 
         private async Task<List<Collection>> GetAllCollections()
-            => await _context.Collections
+        {
+            await using AppDbContext dbContext = await _factory.CreateDbContextAsync();
+            return await dbContext.Collections
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
                 .Include(col => col.Items).ThenInclude(item => item.Likes).ThenInclude(like => like.LikedBy)
                 .Include(collection => collection.Owner)
                 .ToListAsync();
-        
+        }
+
         private async Task<List<Collection>> GetAllPublicCollections()
             => await _context.Collections.Where(collection => !collection.IsPrivate)
                 .Include(collection => collection.Owner)
@@ -232,5 +235,13 @@ namespace UserCollectionBlaz.Service
 
         public async Task<List<Tag>> GetAllTags()
             => Tags;
+
+        public async Task<int> GetItemCount()
+        {
+            int count = 0;
+            (await GetAllCollections())
+                .ForEach(collection => count += collection.Items.Count);
+            return count;
+        }
     }
 }
