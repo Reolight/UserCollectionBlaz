@@ -4,32 +4,41 @@
 @inject Service.SearchService _SearchService
 @inject NavigationManager _Navigation
 
-<div class="flex-column">
-    <div class="flex-row">
-        <p>Search for: </p>
-        <input @bind="Query" type="search"/>
-        <button class="btn btn-outline-primary" @onclick="SearchFor">Search</button>
-    </div>
-<div class="btn-group-sm">
-    <button class=@(_searchInCollections ? _checked : _unchecked) 
+<div>
+    <div class="flex-column">
+        <div class="flex-row">
+            <p>Search for: </p>
+            <input @bind="Query" type="search"/>
+            <button class="btn btn-outline-primary" @onclick="SearchFor">Search</button>
+        </div>
+        <div class="btn-group-sm">
+            <button class=@(_searchInCollections ? _checked : _unchecked) 
             @onclick="() => { _searchInCollections = !_searchInCollections; SearchFor();}">
-        Collections
-    </button>
-    <button class="@(_searchInItems ? _checked : _unchecked)" 
-            @onclick="() => {_searchInItems = !_searchInItems; SearchFor();}">
-        Items
-    </button>
-    <button class="@(_searchInComments ? _checked : _unchecked)" 
-            @onclick="() => {_searchInComments = !_searchInComments; SearchFor();}">
-        Comments
-    </button>
-</div>
+                Collections
+            </button>
+            <button class="@(_searchInItems ? _checked : _unchecked)" 
+                    @onclick="() => {_searchInItems = !_searchInItems; SearchFor();}">
+                Items
+            </button>
+            <button class="@(_searchInComments ? _checked : _unchecked)" 
+                    @onclick="() => {_searchInComments = !_searchInComments; SearchFor();}">
+                Comments
+            </button>
+        </div>
+    </div>
 </div>
 
 <table class="table table-striped">
     @if (_resultVms.Count == 0)
     {
-        <h4>There is no such @(_searchInCollections? " collection":"") @(_searchInItems?"item":"") @(_searchInComments?"comment":"")</h4>
+        <div>
+            <h4>
+                There is no such @(_searchInCollections ? " collection" : "") @(_searchInItems ? "item" : "") @(_searchInComments ? "comment" : "")
+            </h4>
+            <h5 style="width:300px;">
+                Please note that private collections and items are not included in the search, although they affect the tag cloud
+            </h5>
+        </div>
     }
     else
     {

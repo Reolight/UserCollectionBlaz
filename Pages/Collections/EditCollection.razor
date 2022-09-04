@@ -130,7 +130,7 @@
     protected override async Task OnInitializedAsync()
     {
         UserName = httpAccessor.HttpContext.User.Identity.Name;
-        if (CollectionID is not null) EditableCollection = await collectionService.GetCollectionVMAsync(CollectionID);
+        if (CollectionID is not null) EditableCollection = await collectionService.GetCollectionVMAsync(CollectionID, UserName, true);
         _wasNull = EditableCollection is null;
         EditableCollection ??= new() { Owner = UserName, AdditionalFieldsInfo = new () };
     }

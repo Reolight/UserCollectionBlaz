@@ -1,7 +1,9 @@
 ﻿@page "/item/{CollectionId:int}/{Id:int}"
 @using UserCollectionBlaz.ViewModel
 @using UserCollectionBlaz.Areas.Identity.Data
-@inject Service.CollectionService CollectionService;
+@inject Service.CollectionService CollectionService
+@inject Service.UserService _userService
+@inject IHttpContextAccessor _contextAccessor
 
 <body>
 @if (itemVm is not null)
@@ -47,6 +49,10 @@
 
     <Comments/>
 }
+else
+{
+    <p>There is no such item</p>
+}
 </body>
 
 @code {
@@ -54,10 +60,12 @@
     [Parameter] public int CollectionId { get; set; }
     private ItemVM? itemVm;
     private CollectionVM? CollectionVM;
+    private UserVM UserViewer;
 
     protected override async Task OnInitializedAsync()
     {
-        CollectionVM = await CollectionService.GetCollectionVMAsync(CollectionId);
+        UserViewer = await _userService.GetVM(_contextAccessor.HttpContext.User.Identity.Name);
+        CollectionVM = await CollectionService.GetCollectionVMAsync(CollectionId, UserViewer.UserName);
         if (CollectionVM is not null)
             itemVm = (from itma in CollectionVM.Items where itma.Id == Id select itma).FirstOrDefault();
     }

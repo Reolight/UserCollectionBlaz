@@ -41,7 +41,7 @@ public class SearchService
     {
         await using AppDbContext dbContext = await _factory.CreateDbContextAsync();
         List<SearchResultVM> resultVms = new();
-        dbContext.Collections
+        dbContext.Collections.Where(collection => !collection.IsPrivate)
             .Include(col => col.Items).ThenInclude(item => item.Tags)
             .Include(col => col.Owner).ToList()
             .ForEach(collection => collection.Items
@@ -53,7 +53,7 @@ public class SearchService
     {
         await using AppDbContext dbContext = await _factory.CreateDbContextAsync();
         List<SearchResultVM> resultVms = new();
-        dbContext.Collections
+        dbContext.Collections.Where(collection => !collection.IsPrivate)
             .Include(col => col.Owner).ToList()
                 .ForEach(collection => resultVms.Add(new SearchResultVM(collection, query)));
         return resultVms.Where(vm => vm.Score > 0).ToList();

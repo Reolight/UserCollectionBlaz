@@ -62,14 +62,18 @@ namespace UserCollectionBlaz.Service
         }
 
         private async Task<List<Collection>> GetAllPublicCollections()
-            => await _context.Collections.Where(collection => !collection.IsPrivate)
+        {
+            await using AppDbContext dbContext = await _factory.CreateDbContextAsync();
+            return await dbContext.Collections.Where(collection => !collection.IsPrivate)
                 .Include(collection => collection.Owner)
                 .Include(col => col.Items).ThenInclude(item => item.Tags)
                 .Include(col => col.Items).ThenInclude(item => item.Likes).ThenInclude(like => like.LikedBy)
                 .ToListAsync();
-        
-        public async Task<CollectionVM?> GetCollectionVMAsync(int? Id)
+        }
+
+        public async Task<CollectionVM?> GetCollectionVMAsync(int? Id, string UserName, bool strict = false)
         {
+            AppUser user = await userManager.FindByNameAsync(UserName);
             Collection? collection = await (from col in _context.Collections
                                             where col.Id == Id
                                             select col)
@@ -77,6 +81,8 @@ namespace UserCollectionBlaz.Service
                 .Include(col => col.Items).ThenInclude(item => item.Likes).ThenInclude(like => like.LikedBy)
                 .Include(collection => collection.Owner)
                 .FirstOrDefaultAsync();
+            
+            if (collection is not null && (strict || collection.IsPrivate) && (collection.Owner.UserName != user.UserName || !user.IsAdmin)) return null;
             return collection is not null ? new CollectionVM(collection) : null;
         }
         public async Task<List<CollectionVM>?> GetCollectionVMsByAutor(string name, bool isOwner = false)

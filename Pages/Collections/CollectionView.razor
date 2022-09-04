@@ -1,7 +1,11 @@
 ﻿@page "/collection/{CollectionId:int}"
 @using UserCollectionBlaz.ViewModel
+@using Microsoft.AspNetCore.Identity
+@using UserCollectionBlaz.Areas.Identity.Data
+@using UserCollectionBlaz.Service
 @inject IHttpContextAccessor _httpContextAccessor
 @inject Service.CollectionService _collectionService
+@inject UserService _userService
 
 <body>
 @if (_collectionVm is not null)
@@ -42,17 +46,21 @@
     
     <Comments />
 }
+else
+{
+    <p>There is no such collection</p>
+}
 </body>
 
 @code {
     [Parameter] public int CollectionId { get; set; }
     private CollectionVM? _collectionVm;
-    private string? UserViewer;
+    private UserVM? UserViewer;
 
     protected override async Task OnInitializedAsync()
     {
-        _collectionVm = await _collectionService.GetCollectionVMAsync(CollectionId);
-        UserViewer = _httpContextAccessor.HttpContext.User.Identity.Name;
+        UserViewer = await _userService.GetVM(_httpContextAccessor.HttpContext.User.Identity.Name);
+        _collectionVm = await _collectionService.GetCollectionVMAsync(CollectionId, _httpContextAccessor.HttpContext.User.Identity.Name);
     }
 
 }
