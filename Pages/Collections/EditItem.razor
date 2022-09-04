@@ -45,20 +45,20 @@
 
                         @if (_tagError.Length > 0)
                         {
-                            <div class="alert alert-danger">
+                            <div class="alert alert-danger mt-3">
                                 <p>@_tagError</p>
                             </div>
                         }
-                        <div class="flex-row">
+                        <div class="flex-row mt-1 mb-1">
                             @foreach (Tag tag in @EditableItem.Tags)
                                                             {
-                                                                <div class="btn-group-sm" role="group">
+                                                                <div class="btn-group-sm d-inline-flex me-2" role="group">
                                                                     <a class="btn btn-outline-primary">@tag.Name</a>
                                                                     <button type="button" class="btn btn-outline-danger" @onclick="() => {EditableItem.Tags.Remove(tag); StateHasChanged(); }">x</button>
                                                                 </div>
                                                             }
                                                             
-                                <input type="text" class="form-control" list="suggestions" id="suggestions" @bind="_tag" @oninput="Autocompletion" placeholder="Input tags here"/>
+                                <input type="text" class="form-control mt-2" list="suggestions" id="suggestions" @bind="_tag" @oninput="Autocompletion" placeholder="Input tags here"/>
                                 <datalist id="suggestions">
                                     @foreach (string sug in _Suggestions)
                                         {
@@ -238,7 +238,7 @@
     private bool ValidateTagInput(string val)
     {
         _tagError = "";
-        if (val.Length < 4)
+        if (val.Length < 4 && val.Length > 0)
             _tagError += "Length is too small. ";
         if (val.IndexOfAny("!@#$%^&*()+/.,|\\\"';:{[]}`~№? 0123456789".ToCharArray()) != -1)
             _tagError += "Tag input contains prohibited symbols. Use symbols only. ";

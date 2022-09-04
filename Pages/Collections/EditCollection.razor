@@ -45,8 +45,15 @@
                                 Is private
                             </label>
                         </div>
-
-                    @foreach (string key in EditableCollection.AdditionalFieldsInfo.Keys){
+                        <p class="mb-2 mt-2">Fill rules for additional fields. Examples of additional fields:</p>
+                        <ul>
+                            <li><b><abbr title="Short text">String:</abbr></b> Autor</li>
+                            <li><b><abbr title="Day, month and year">Date:</abbr></b> Published date</li>
+                            <li><b><abbr title="Can be FALSE or TRUE">Boolean:</abbr></b> Available</li>
+                            <li><b><abbr title="Long text">Text:</abbr></b> Description</li>
+                            <li><b><abbr title="Integer number: 1, 2, 3...">Integer:</abbr></b> Volumes</li>
+                        </ul>
+                        @foreach (string key in EditableCollection.AdditionalFieldsInfo.Keys){
                     <div class="input-group mb-3">
                                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">@EditableCollection.AdditionalFieldsInfo[key]</button>
                         <ul class="dropdown-menu">

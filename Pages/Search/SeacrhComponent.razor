@@ -44,17 +44,19 @@
     {
         @foreach (SearchResultVM resultVm in _resultVms)
         {
-            <tr @onclick="() => _Navigation.NavigateTo(resultVm.PostedAt)">
-                <td><img class="rounded-circle" width="64" height="64" src=@resultVm.ImageSrc></td>
-                <td>@($"({resultVm.AutorName}) {resultVm.Name}")</td>
-                <td>@((MarkupString)resultVm.Content)</td>
+            <tr>
+                <span @onclick="() => _Navigation.NavigateTo(resultVm.PostedAt)">
+                    <td><img class="rounded-circle" width="64" height="64" src=@resultVm.ImageSrc></td>
+                    <td>@($"({resultVm.AutorName}) {resultVm.Name}")</td>
+                    <td>@((MarkupString)resultVm.Content)</td>
+                </span>
                 <td>Score: @resultVm.Score</td>
                 <td class="flex-column">
                     @if (resultVm.tags is not null)
                     {
                         @foreach (string tag in resultVm.tags)
                         {
-                            <TagComponent Name=@tag IsSelected=@(Query.Contains(tag)) />
+                            <TagComponent Name=@tag IsSelected=@(Query.Contains(tag))/>
                         }
                     }
                 </td>
