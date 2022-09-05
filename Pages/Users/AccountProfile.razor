@@ -28,10 +28,6 @@ else
                 <button type="button" class="btn btn-outline-dark" @onclick="EditModeSwitch">
                     Edit profile
                 </button>
-                } 
-                else if (!string.IsNullOrEmpty(LoggedUserName))
-                {
-                    <button class="btn btn-outline-success">Laik</button>
                 }
             </div>
         </div>
@@ -88,7 +84,7 @@ else
         {
             @foreach (CollectionVM collection in collections)
             {
-                <Collection collection=@collection CurrentUserName=@LoggedUserName />
+                <Collection collection=@collection CurrentUserName=@(LoggedUser is null? "" : LoggedUser.UserName) />
             }
         }
 
@@ -108,7 +104,7 @@ else
     private bool _isOwner;
     private string? UrlImg;
     private string? StyleWidth;
-    private string? LoggedUserName;
+    private UserVM? LoggedUser;
     private UserVM? EditUserData;
     private IBrowserFile Image;
     private List<CollectionVM>? collections;
@@ -121,12 +117,12 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        LoggedUserName = httpAccessor.HttpContext?.User.Identity is null ? "" : 
-            httpAccessor.HttpContext.User.Identity.Name;
-        name ??= LoggedUserName;
+        LoggedUser = httpAccessor.HttpContext?.User.Identity is null ? null : 
+            await userServ.GetVM(httpAccessor.HttpContext.User.Identity.Name);
+        name ??= LoggedUser.UserName;
         if (!string.IsNullOrEmpty(name)){
             user = userServ.GetHeavyUser(name);
-            _isOwner = LoggedUserName is not null && (LoggedUserName.ToLower().Equals(user.UserName.ToLower()) || user.IsAdmin);
+            _isOwner = LoggedUser is not null && (LoggedUser.UserName.ToLower() == user.UserName.ToLower() || LoggedUser.IsAdmin);
             StyleWidth =
                 $"width: {(int)((double)(user.PostedTimes - UserVM.GetMinPostForThisLevel(user.Level)) / (UserVM.GetMaxPostForNewLevel(user.Level) -  UserVM.GetMinPostForThisLevel(user.Level)) * 100)}%";
             collections = await collectionService.GetCollectionVMsByAutor(name, _isOwner) ?? new();

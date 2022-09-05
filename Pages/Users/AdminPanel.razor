@@ -25,7 +25,10 @@
             @foreach(AppUser user in Users)
             {
                 <tr style=@(user.IsBlocked ? "background: #dfc2c4" : user.IsAdmin ? "background: darkseagreen" : "color: black")>
-                    <td  @onclick="() => NavigateTo(user.UserName)"><img class="rounded-circle" src=@user.AvatarSrc width="32" height="32"/>@user.UserName</td>
+                    <td class="d-flex d-inline">
+                        <img class="rounded-circle" src=@user.AvatarSrc width="32" height="32"/>
+                        <a class="nav-item" href=@($"/profile/{user.UserName}")>@user.UserName</a>
+                    </td>
                     <td>@user.PostedTimes</td>
                 
                     @if (CurrentUser is not null && CurrentUser.IsAdmin)
