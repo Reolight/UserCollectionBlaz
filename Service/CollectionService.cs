@@ -71,9 +71,9 @@ namespace UserCollectionBlaz.Service
                 .ToListAsync();
         }
 
-        public async Task<CollectionVM?> GetCollectionVMAsync(int? Id, string UserName, bool strict = false)
+        public async Task<CollectionVM?> GetCollectionVMAsync(int? Id, string? UserName, bool strict = false)
         {
-            AppUser user = await userManager.FindByNameAsync(UserName);
+            AppUser? user = string.IsNullOrWhiteSpace(UserName)? null : await userManager.FindByNameAsync(UserName);
             Collection? collection = await (from col in _context.Collections
                                             where col.Id == Id
                                             select col)
@@ -82,7 +82,9 @@ namespace UserCollectionBlaz.Service
                 .Include(collection => collection.Owner)
                 .FirstOrDefaultAsync();
             
-            if (collection is not null && (strict || collection.IsPrivate) && (collection.Owner.UserName != user.UserName || !user.IsAdmin)) return null;
+            if (collection is not null && 
+                (strict || collection.IsPrivate) 
+                && ((user is null) || (collection.Owner.UserName != user.UserName && !user.IsAdmin))) return null;
             return collection is not null ? new CollectionVM(collection) : null;
         }
         public async Task<List<CollectionVM>?> GetCollectionVMsByAutor(string name, bool isOwner = false)
@@ -223,9 +225,20 @@ namespace UserCollectionBlaz.Service
         }
 
         public async Task<List<CollectionVM>> GetMostLikedCollections(int count, int page = 0)
+        => (await ConvertCollectionToVM(
+            await GetAllPublicCollections()))
+                .OrderByDescending(vm => vm.Likes)
+                .Skip(count * page)
+                .Take(count).ToList(); 
+
+        public async Task<List<CollectionVM>> GetLargestCollections(int count, int page = 0)
         {
-            List<CollectionVM> CollectionsVm = await ConvertCollectionToVM(await GetAllPublicCollections());
-            return CollectionsVm.OrderByDescending(vm => vm.Likes).Skip(count * page).Take(count).ToList();
+            return await ConvertCollectionToVM(
+                (await GetAllPublicCollections())
+                    .Where(col => col.Items.Count > 0)
+                    .OrderByDescending(col => col.Items.Count)
+                    .Skip(count * page)
+                    .Take(count).ToList());
         }
 
         public async Task<Tag> CreateNewTag(string name)

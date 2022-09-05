@@ -1,15 +1,15 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using UserCollectionBlaz.Areas.Identity.Data
 @using UserCollectionBlaz.ViewModel
-@using Microsoft.JSInterop
 @inject UserManager<AppUser> userManager
 @inject IHttpContextAccessor httpAccessor
 @inject Service.CollectionService collectionService
 @inject NavigationManager navigationManager
 
-<div class="bg-gradient mb-3 mt-3 bg-opacity-25 bg-secondary container shadow flex-row ">
-    <div class="d-inline-flex flex-row">
-        <div class="col">
+<div class="d-flex bg-gradient mb-3 mt-3 bg-opacity-25 bg-secondary shadow flex-row" style="margin: auto;width: inherit;">
+    <div class="d-flex flex-column">
+    <div class="d-flex align-items-center justify-content-around" style="width: 100%">
+        <div class="d-flex">
             <span class="align-bottom">
                 <a class="nav-item" href=@($"/collection/{collection.Id}")>
                 @if (collection.IsPrivate)
@@ -23,85 +23,91 @@
                 </a>
             </span>
         </div>
-        <div class="col-6">
+        <div class="d-flex">
             <cite class="ps-1">by @collection.Owner</cite>
             <img class="ps-1" src="items/hrt-sol.png" width="16" height="16"/>@collection.Likes
             <a class="ps-1" role="button" data-bs-toggle="collapse" href=@($"#collapse{collection.Id}") aria-expanded="False" aria-controls="@($"collapse{collection.Id}")">Collapse</a>
         </div>
-        <div class="col">
-            <div class="btn-group flex-row-reverse" role="group">
+        <div class="d-flex">
+            <div class="d-flex btn-group align-content-end" role="group">
                 @if (_isOwner)
                 {
-                    <button type="button" class="btn btn-warning" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
+                    <button type="button" class="btn btn-warning d-flex" @onclick="() => ToEditCollection(collection.Id)">Edit</button>
                 }
-                <a type="button" class="btn btn-primary" href=@($"/collection/{collection.Id}")>View</a>
                 @if (_isOwner)
                 {
-                    <button type="button" class="btn btn-danger" @onclick="RemoveCollection">Delete</button>
+                    <button type="button" class="btn btn-danger d-flex" @onclick="RemoveCollection">Delete</button>
                 }
             </div>
-            </div>
-        
-    </div>
-    <div class="collapse" id="@($"collapse{collection.Id}")">
-        <div class="mb-1 mt-1">
-            <p>@((MarkupString)collection.Description)</p>
         </div>
-        @foreach (ItemVM item in collection.Items)
-        {
-            <div class="card container-sm d-sm-inline-flex flex-column mw-100" style="width: 300px;" >
-                <div @onclick="() => ToViewItem(item.Id)">
-                    <img class="card-img-top" src=@item.ImageSrc alt=@item.Name/>
-                    <div class="card-body">
-                        <h5 class="card-title">@item.Name</h5>
-                        <p class="card-text">@((MarkupString)item.Description)</p>
-                    </div>
-                </div>
-                    @foreach (string field in item.AdditionalFields.Keys)
-                    {
-                        <p class="card-text">@field - @item.AdditionalFields[field]</p>
-                    }
-
-                    <div class="flex-row">
-                        @foreach (Tag tag in item.Tags)
-                        {
-                            <TagComponent TagItem=@tag />
-                        }
-                    </div>
-
-
-                <div class="d-inline-flex flex-row">
-                    @if (_isOwner)
-                    {
-                        <a type="button" class="btn btn-primary" href=@($"/item/edit/{collection.Id}/{item.Id}")>Edit</a>
-                    }
-                    <LikeComponent Location=@($"item-{item.Id}") />
-                    @if (_isOwner)
-                    {
-                        <button type="button" class="btn btn-primary"
-                                @onclick="() => RemoveItem(item.Id)">Delete</button>
-                    }
-                    <br/>
-
-                </div>
-            </div>
-        }
-        @if (_isOwner)
-        {
-            <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
-                <img class="card-img-top" alt="Add another item"/>
-                <div class="card-body">
-                    <button @onclick="ToCreateItem" class="btn btn-primary">Add</button>
-                </div>
-            </div>
-        }
     </div>
+        <div class="collapse" id="@($"collapse{collection.Id}")">
+            <div class="d-flex flex-column container">
+                <div class="mb-1 mt-1">
+                    <p>@((MarkupString)collection.Description)</p>
+                </div>
+                <div class="container">
+                @foreach (ItemVM item in collection.Items)
+                {
+                    <div class="card container-sm d-inline-flex flex-column mw-100 mb-1 mt-1" style="width: 300px; min-width: 250px;">
+                        <div style="overflow-y:scroll;height:400px" @onclick="() => ToViewItem(item.Id)">
+                            <img class="card-img-top" src=@item.ImageSrc alt=@item.Name />
+                            <div class="card-body">
+                                <h5 class="card-title">@item.Name</h5>
+                                <p class="card-text">@((MarkupString)item.Description)</p>
+                            </div>
+                        </div>
+                        @foreach (string field in item.AdditionalFields.Keys)
+                        {
+                            <p class="card-text">@field - @item.AdditionalFields[field]</p>
+                        }
+
+                        <div class="flex-row">
+                            @foreach (Tag tag in item.Tags)
+                            {
+                                <TagComponent TagItem=@tag />
+                            }
+                        </div>
+
+
+                        <div class="d-inline-flex flex-row mb-2 mt-2" style="height: 40px">
+                            @if (_isOwner)
+                            {
+                                <a type="button" class="btn btn-primary" href=@($"/item/edit/{collection.Id}/{item.Id}")>Edit</a>
+                            }
+                            <LikeComponent Location=@($"item-{item.Id}") />
+                            @if (_isOwner)
+                            {
+                                <button type="button" class="btn btn-primary"
+                                @onclick="() => RemoveItem(item.Id)">
+                                    Delete
+                                </button>
+                            }
+                            <br />
+                        </div>
+                    </div>
+                }
+                @if (_isOwner)
+                {
+                    <div class="card d-inline-flex d-sm-inline-flex flex-column mw-100 start-0 w-25">
+                        <img class="card-img-top" alt="Add another item" />
+                        <div class="card-body">
+                            <button @onclick="ToCreateItem" class="btn btn-primary">Add</button>
+                        </div>
+                    </div>
+                }
+                </div>
+            </div>
+        </div>
+    </div>
+    
 </div>
 
 @code {
     [Parameter] public CollectionVM collection { get; set; }
     [Parameter] public AppUser? CurrentUser { get; set; }
     [Parameter] public bool editable { get; set; }
+    [Parameter] public string? CurrentUserName { get; set; }
     private bool _isOwner;
 
     public class BrowserDimension
@@ -112,7 +118,8 @@
 
     protected override void OnInitialized()
     {
-        _isOwner = CurrentUser is not null && CurrentUser.UserName == collection.Owner;
+        _isOwner = (CurrentUser is not null && CurrentUser.UserName == collection.Owner) ||
+            (CurrentUserName is not null && CurrentUserName == collection.Owner);
     }
 
     private async void RemoveCollection() 
@@ -125,18 +132,10 @@
     private void ToViewItem(int id) => navigationManager.NavigateTo($"/item/{collection.Id}/{id}");
     private void ToCreateItem() => navigationManager.NavigateTo($"item/{collection.Id}/new");
 
-           private void RemoveItem(int id) =>
-        collectionService.RemoveItemFromCollectionAsync(
-            collection,
-            collection.Items.Find(itma => itma.Id == id));
-    
-    public class BrowserService
+    private async void RemoveItem(int id)
     {
-        private readonly IJSRuntime _js;
-
-        public BrowserService(IJSRuntime js)
-        {
-            _js = js;
-        }
+        await collectionService.RemoveItemFromCollectionAsync(collection,
+            collection.Items.Find(itma => itma.Id == id));
+        StateHasChanged();
     }
 }

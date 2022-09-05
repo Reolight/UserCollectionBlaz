@@ -65,7 +65,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         UserViewer = await _userService.GetVM(_contextAccessor.HttpContext.User.Identity.Name);
-        CollectionVM = await CollectionService.GetCollectionVMAsync(CollectionId, UserViewer.UserName);
+        CollectionVM = await CollectionService.GetCollectionVMAsync(CollectionId, UserViewer is null? "" : UserViewer.UserName);
         if (CollectionVM is not null)
             itemVm = (from itma in CollectionVM.Items where itma.Id == Id select itma).FirstOrDefault();
     }

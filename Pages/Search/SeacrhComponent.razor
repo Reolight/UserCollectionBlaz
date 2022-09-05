@@ -74,12 +74,21 @@
     bool _searchInItems = true;
     bool _searchInCollections = true;
     bool _searchInComments = true;
-    
+
     protected override async Task OnInitializedAsync()
     {
         var res = await _SearchService.SearchFor(Query, _searchInItems, _searchInCollections, _searchInComments);
         if (res is not null && res.Count > 0)
             _resultVms.AddRange(res);
+        StateHasChanged();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var res = await _SearchService.SearchFor(Query, _searchInItems, _searchInCollections, _searchInComments);
+        if (res is not null && res.Count > 0)
+            _resultVms = res;
+        else _resultVms = new();
         StateHasChanged();
     }
 

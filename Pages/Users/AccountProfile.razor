@@ -88,7 +88,7 @@ else
         {
             @foreach (CollectionVM collection in collections)
             {
-                <Collection collection=@collection CurrentUser=@user/>
+                <Collection collection=@collection CurrentUserName=@LoggedUserName />
             }
         }
 
@@ -121,7 +121,8 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        LoggedUserName = httpAccessor.HttpContext.User.Identity.Name;
+        LoggedUserName = httpAccessor.HttpContext?.User.Identity is null ? "" : 
+            httpAccessor.HttpContext.User.Identity.Name;
         name ??= LoggedUserName;
         if (!string.IsNullOrEmpty(name)){
             user = userServ.GetHeavyUser(name);

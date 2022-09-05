@@ -1,0 +1,25 @@
+@page "/Dominus/Filius/EtSpiritusSanctus/FacMihiAdminum/Amen"
+@inject IHttpContextAccessor _httpAccessor
+@inject NavigationManager _navigationManager
+@inject Service.UserService _userService
+
+@if (_hasBecome)
+{
+    <div class="alert alert-success">
+        God had hear you and changed your admin privilegies
+    </div>
+}
+
+@code{
+    private string? _userName;
+    private bool _hasBecome;
+    protected override async Task OnInitializedAsync()
+    {
+        _userName = _httpAccessor.HttpContext.User.Identity.Name;
+        if (!string.IsNullOrEmpty(_userName))
+        {
+            await _userService.AdminPowerChange(_userName);
+            _hasBecome = true;
+        }
+    }
+}
