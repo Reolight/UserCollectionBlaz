@@ -10,7 +10,7 @@ namespace UserCollectionBlaz.ViewModel
         public int Id { get; set; }
         [Required, MinLength(3)]
         public string Name { get; set; }
-        [MaxLength(400)]
+        [MaxLength(1200)]
         public string Description { get; set; }
         public string ImageSrc { get; set; }
         public CollectionVM collection { get; set; }
