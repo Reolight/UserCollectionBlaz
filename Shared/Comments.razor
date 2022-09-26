@@ -86,7 +86,6 @@
         UrlKey = navigationManager.Uri.Replace(navigationManager.BaseUri, "");
         _postedComments = (await commentsService.GetAllByKey(UrlKey) ?? new List<Comment>()).OrderByDescending(com => com.PostedTime).ToList();
         User = await userService.GetVM(httpAccessor.HttpContext.User.Identity.Name);
-        
     }
 
     protected override void OnParametersSet()
