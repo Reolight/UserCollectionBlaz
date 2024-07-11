@@ -33,3 +33,35 @@
 .textarea {
     resize: none
 }
+
+.Panel{
+    position: relative;
+    z-index: 1;
+    background-color: aliceblue;
+    font-family: 'Courier New', Courier, monospace;
+    color: #282c34;
+    margin: 15px;
+    padding-left: 18px;
+    padding-right: 18px;
+    width: fit-content;
+    margin-right: auto;
+    margin-left: auto;
+    border: #282c34 1px solid;
+    border-radius: 4px;
+    box-shadow: #282c34 12px 12px;
+    transition: all 1s;
+  }
+
+.Panel input{
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: medium;
+    box-shadow: #282c34 4px 4px;
+    transition: all 0.25s;
+  }
+  
+  .Panel input:focus{
+    transform: translateX(4px) translateY(4px);
+    box-shadow: none;
+    outline: #282c34 solid 2px;
+  }

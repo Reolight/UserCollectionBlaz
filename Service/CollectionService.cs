@@ -174,7 +174,7 @@ namespace UserCollectionBlaz.Service
         {
             Collection? collection = await GetCollection(item.collection);
             if (collection is null) return false;
-            Item newItem = new Item
+            Item newItem = new()
             {
                 Name = item.Name,
                 Description = item.Description,

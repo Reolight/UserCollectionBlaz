@@ -8,11 +8,12 @@ using UserCollectionBlaz.Data;
 using UserCollectionBlaz.Service;
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = builder.Configuration.GetConnectionString("AppDbContextConnection") ?? throw new InvalidOperationException("Connection string 'AppDbContextConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("AppDbContextConnection") 
+    ?? throw new InvalidOperationException("Connection string 'AppDbContextConnection' not found.");
 
 builder.Services.AddPooledDbContextFactory<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
-builder.Services.AddScoped<AppDbContext>(
+builder.Services.AddScoped(
     p => p.GetRequiredService<IDbContextFactory<AppDbContext>>().CreateDbContext());
 
 builder.Services.AddDefaultIdentity<AppUser>(
@@ -51,6 +52,7 @@ builder.Services.AddScoped<IEmailSender, EmailService>();
 builder.Services.AddTransient<LikeService>();
 builder.Services.AddTransient<SearchService>();
 builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(nameof(EmailSettings)));
 builder.Services.AddHttpClient();
 builder.Services.AddResponseCompression(opts =>
 {

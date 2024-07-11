@@ -1,4 +1,5 @@
 ﻿using System.Linq.Dynamic.Core;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Radzen;
 using UserCollectionBlaz.Areas.Identity.Data;
@@ -29,13 +30,11 @@ public class SearchService
                     .ForEach(item => resultVms.Add(new SearchResultVM(item, query))));
         return resultVms;
     }
-    
-    private string QueryCleaner(string dirty)
-    {
-        "!@$%^&*()_+-=/<>,.?\\\"'|`~;:[{}]".ToCharArray().ToList()
-            .ForEach(c =>dirty = dirty.Replace($"{c}", ""));
-        return dirty;
-    }
+
+    private static Regex clean = new Regex("");
+
+    public static string QueryCleaner(string dirty)
+        => clean.Replace(dirty, "");
 
     private async Task<List<SearchResultVM>?> SearchForItems(string query)
     {
